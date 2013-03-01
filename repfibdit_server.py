@@ -11,18 +11,27 @@ class Echo(protocol.Protocol):
 	def dataReceived(self, data):
 		print "CLIENT >>", data
 		if len(data) > 1:
-			num = data[(data.find(":")+1):]
-			f = open('found_repfibdigits.txt', "a")
-			f.write(num)
-			f.close()
+			if data[0] == 'f':
+				num = data[(data.find(":")+1):]
+				f = open('next_repfibdigit.txt', "w")
+				f.write(num)
+				f.close()	
+				self.transport.write('work recorded')	
+			if data[0] == 'k':
+				num = data[(data.find(":")+1):]
+				f = open('found_repfibdigits.txt', "a")
+				f.write(num)
+				f.write('\n')
+				f.close()
+				self.transport.write('keith num record')
 
 		if data == "n":
 			new_num = self.new_number()
 			print "SERVER >>", new_num
 			self.transport.write(new_num)
-		else:
-			print "SERVER >>", data
-			self.transport.write(data)	
+		#else:
+		#	print "SERVER >>", data
+		#	self.transport.write(data)	
 	
 	def new_number(self):
 		f = open('next_repfibdigit.txt', "r")
