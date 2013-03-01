@@ -7,6 +7,8 @@ import Queue
 import threading
 import time
 import itertools
+import cPickle as pickle
+import numpy as np
 
 ########################################################################
 class repfigtest(threading.Thread):
@@ -47,16 +49,16 @@ class repfigtest(threading.Thread):
 			print '---------------------------------------------'
 			print 'queue:',  threading.current_thread()
 			print number_to_test, " is a Keith Number!"
-			print "PROOF:"
-			n=map(int,str(number_to_test))
-			while number_to_test > sum(n):
-				print n ," = ", sum(n)
-				n=n[1:]+[sum(n)]
-			print n ," = ", sum(n)
+			#print "PROOF:"
+			#n=map(int,str(number_to_test))
+			#while number_to_test > sum(n):
+			#	print n ," = ", sum(n)
+			#	n=n[1:]+[sum(n)]
+			#print n ," = ", sum(n)
 			self.report_keith_num(number_to_test)
 			print "new keith number reported!!!!"
 			print '---------------------------------------------'
-			time.sleep(1)
+			#time.sleep(1)
 		#else:
 		#	print number_to_test, " is NOT a Keith Number"
 		return
@@ -73,23 +75,7 @@ class repfigtest(threading.Thread):
 		high = the_range[1]
 		for x in self.my_xrange(low, high):
 			self.is_repfibdigit(x)
-		self.report_work_completed(high)
-		
-
-	def report_work_completed(self, num):
-		#establish coms with server
-		s = socket.socket()         # Create a socket object
-		host = socket.gethostname() # Get local machine name
-		port = 8000                # Reserve a port for your service.
-		print 'Connecting to ', host, port
-		s.connect((host, port))
-		#while True:
-		msg = 'f:' + str(num)
-		print 'CLIENT reporting work completed >> ', msg
-		s.send(msg)
-		ack  = s.recv(1024)
-		print 'SERVER >> ', ack
-		s.close                     # Close the socket when done
+		#self.report_work_completed(high)
 		
 
 	def report_keith_num(self, num):
@@ -108,21 +94,35 @@ class repfigtest(threading.Thread):
 		s.close                     # Close the socket when done
 		
 
-def get_next_chunk():
-	#establish coms with server
-	s = socket.socket()         # Create a socket object
-	host = socket.gethostname() # Get local machine name
-	port = 8000                # Reserve a port for your service.
-	print 'Connecting to ', host, port
-	s.connect((host, port))
-	#while True:
-	print 'CLIENT >> '
-	msg = 'n'
-	s.send(msg)
-	new_num = s.recv(1024)
-	print 'SERVER >> ', new_num
-	s.close                     # Close the socket when done
-	return new_num
+def get_work_unit():
+		#establish coms with server
+		s = socket.socket()         # Create a socket object
+		host = socket.gethostname() # Get local machine name
+		port = 8000                # Reserve a port for your service.
+		print 'Connecting to ', host, port
+		s.connect((host, port))
+		msg = 'n'
+		print 'CLIENT >> ', msg
+		s.send(msg)
+		server_reponse = s.recv(1024)
+		new_work_unit = pickle.loads(server_reponse)
+		print 'SERVER >> ', new_work_unit
+		s.close                     # Close the socket when done
+		return new_work_unit
+
+def report_work_completed(work_unit_uuid):
+		#establish coms with server
+		s = socket.socket()         # Create a socket object
+		host = socket.gethostname() # Get local machine name
+		port = 8000                # Reserve a port for your service.
+		print 'Connecting to ', host, port
+		s.connect((host, port))
+		msg = 'f:' + str(work_unit_uuid)
+		print 'CLIENT reporting work completed >> ', msg
+		s.send(msg)
+		ack  = s.recv(1024)
+		print 'SERVER >> ', ack
+		s.close                     # Close the socket when done
 ########################################################################
 
 
@@ -131,7 +131,7 @@ if __name__=="__main__":
 
 
 	# Set up some global variables
-	num_fetch_threads = 2
+	num_fetch_threads = 1
 	queue = Queue.Queue()
 
 	# create a thread pool and give them a queue
@@ -142,20 +142,23 @@ if __name__=="__main__":
 		#time.sleep(2)
 	print "finished setting up queue workers"
 
-	raw_input()
+	#raw_input()
     	# give the queue some data
 
 
-	
-	#x = 0
+	nowtime = time.clock()
+	x = 0
 	while True:
 		# get num to work from
-		start_num = int(get_next_chunk())
+		work_unit = get_work_unit()
+		start_num = int(work_unit[0])
 		print "starting number:", start_num
-		chunks = 100000
+		#if start_num > 1000000: break
+		chunks = 1 + (((int(work_unit[1]))-start_num) / num_fetch_threads)
+		print "chucks:", chunks
 		#raw_input()
-		for i in range(num_fetch_threads*2):
-			the_range = [( start_num + ( (chunks*(i+1)) - (chunks-1) )), ( start_num + (chunks * (i+1)))]
+		for i in range(num_fetch_threads):
+			the_range = [( start_num-1 + ( (chunks*(i+1)) - (chunks-1) )), ( start_num-1 + (chunks * (i+1)))]
 			print the_range, the_range[0], the_range[1]
 			print "range:", the_range 
 			#raw_input('next worker data')
@@ -168,6 +171,10 @@ if __name__=="__main__":
 		print '*** Main thread waiting'
 		queue.join()
 		print '*** Done'
-		#raw_input('next series')
+		print "Reporting Work Unit completed"
+		report_work_completed(work_unit[2])
+		raw_input('next series')
 		print 'next series.....................................'
+		#break
+	print "time:", abs(nowtime - time.clock()) 
 
