@@ -13,7 +13,8 @@ import numpy as np
 import timeit
 ########################################################################
 
-SERVER = 'isotope11.selfip.com'
+#SERVER = 'isotope11.selfip.com'
+SERVER = ''
 PORT = 6666 
 
 class repfigtest(threading.Thread):
@@ -80,11 +81,14 @@ class repfigtest(threading.Thread):
 	def report_keith_num(self, num):
 		#establish coms with server
 		s = socket.socket()         # Create a socket object
-		host = socket.gethostname() # Get local machine name
-		port = 8000                # Reserve a port for your service.
-		print 'Connecting to ', host, port
-		s.connect((host, port))
-		#while True:
+		while True:
+			try:
+				print 'Connecting to to REPORT KEITH # FOUND!! ', SERVER, PORT
+				s.connect((SERVER, PORT))
+				break
+			except:
+				time.wait(.2)
+				pass
 		msg = 'k:' + str(num)
 		print 'CLIENT reporting new keith number >> ', msg
 		s.send(msg)
@@ -97,12 +101,12 @@ def get_work_unit():
 	print "Getting new work unit...."
 	#establish coms with server
 	s = socket.socket()         # Create a socket object
-	host = socket.gethostname() # Get local machine name
-	port = 8000                # Reserve a port for your service.
+	#host = socket.gethostname() # Get local machine name
+	#port = 8000                # Reserve a port for your service.
 	while True:
 		try:
-			print 'Connecting to ', host, port
-			s.connect((host, port))
+			print 'Connecting to ', SERVER, PORT
+			s.connect((SERVER, PORT))
 			break
 		except:
 			time.wait(.2)
@@ -120,12 +124,12 @@ def report_work_completed(work_unit_uuid):
 	print "reporting work unit to server...."
 	#establish coms with server
 	s = socket.socket()         # Create a socket object
-	host = socket.gethostname() # Get local machine name
-	port = 8000                # Reserve a port for your service.
+	#host = socket.gethostname() # Get local machine name
+	#port = 8000                # Reserve a port for your service.
 	while True:
 		try:
-			print 'Connecting to ', host, port
-			s.connect((host, port))
+			print 'Connecting to ', SERVER, PORT
+			s.connect((SERVER, PORT))
 			break
 		except:
 			time.wait(.2)
@@ -184,5 +188,5 @@ if __name__=="__main__":
 		#raw_input('next series')
 		print '-----------------------------------------------------'
 		print "completion time:", abs(nowtime - time.clock()) 
-
-	#raw_input()
+		
+		raw_input()
