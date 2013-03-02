@@ -45,7 +45,7 @@ class repfigtest(threading.Thread):
 		n = map(int,str(number_to_test))
 		while number_to_test > n[0]:
 			n=n[1:]+[sum(n)]
-		if (number_to_test == n[0]):# & (number_to_test>9):
+		if (number_to_test == n[0]) & (number_to_test>9):
 			print '---------------------------------------------'
 			print 'queue:',  threading.current_thread()
 			print number_to_test, " is a Keith Number!"
