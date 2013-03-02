@@ -12,6 +12,10 @@ import numpy as np
 #import cProfile
 import timeit
 ########################################################################
+
+SERVER = 'isotope11.selfip.com'
+PORT = 6666 
+
 class repfigtest(threading.Thread):
 	"""Threaded RepFibDigit"""
 	#----------------------------------------------------------------------
@@ -93,12 +97,12 @@ def get_work_unit():
 	print "Getting new work unit...."
 	#establish coms with server
 	s = socket.socket()         # Create a socket object
-	host = socket.gethostname() # Get local machine name
-	port = 8000                # Reserve a port for your service.
+	#host = socket.gethostname() # Get local machine name
+	#port = 8000                # Reserve a port for your service.
 	while True:
 		try:
-			print 'Connecting to ', host, port
-			s.connect((host, port))
+			print 'Connecting to ', SERVER, PORT
+			s.connect((SERVER, PORT))
 			break
 		except:
 			time.wait(.2)
@@ -116,12 +120,12 @@ def report_work_completed(work_unit_uuid):
 	print "reporting work unit to server...."
 	#establish coms with server
 	s = socket.socket()         # Create a socket object
-	host = socket.gethostname() # Get local machine name
-	port = 8000                # Reserve a port for your service.
+	#host = socket.gethostname() # Get local machine name
+	#port = 8000                # Reserve a port for your service.
 	while True:
 		try:
-			print 'Connecting to ', host, port
-			s.connect((host, port))
+			print 'Connecting to ', SERVER, PORT
+			s.connect((SERVER, PORT))
 			break
 		except:
 			time.wait(.2)

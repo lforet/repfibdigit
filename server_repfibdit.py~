@@ -7,12 +7,12 @@ import time
 import uuid
 import numpy as np
 
-global_block_size=100000
-global_num_of_blocks=10
+global_block_size=1000000
+global_num_of_blocks=100
+SERVER = 'isotope11.selfip.com'
+PORT = 6666
 
 class Echo(protocol.Protocol):
-	"""This is just about the simplest possible protocol"""
-
 	def dataReceived(self, data):
 		print "CLIENT >>", data
 		self.monitor_work_units()
@@ -148,10 +148,9 @@ def create_work_units(starting_num, block_size, num_of_blocks):
 
 
 def main():
-    """This runs the protocol on port 8000"""
     factory = protocol.ServerFactory()
     factory.protocol = Echo
-    reactor.listenTCP(8000,factory)
+    reactor.listenTCP(PORT,factory)
     reactor.run()
 
 # this only runs if the module was *not* imported

@@ -12,6 +12,10 @@ import numpy as np
 #import cProfile
 import timeit
 ########################################################################
+
+SERVER = 'isotope11.selfip.com'
+PORT = 6666 
+
 class repfigtest(threading.Thread):
 	"""Threaded RepFibDigit"""
 	#----------------------------------------------------------------------
@@ -180,5 +184,5 @@ if __name__=="__main__":
 		#raw_input('next series')
 		print '-----------------------------------------------------'
 		print "completion time:", abs(nowtime - time.clock()) 
-		break
+
 	#raw_input()
