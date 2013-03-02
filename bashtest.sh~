@@ -1,0 +1,4 @@
+#!/bin/bash
+
+python client_repfibdigit.py
+python client_repfibdigit.py

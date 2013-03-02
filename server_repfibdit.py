@@ -7,11 +7,15 @@ import time
 import uuid
 import numpy as np
 
+global_block_size=1000000
+global_num_of_blocks=100
+
 class Echo(protocol.Protocol):
 	"""This is just about the simplest possible protocol"""
 
 	def dataReceived(self, data):
 		print "CLIENT >>", data
+		self.monitor_work_units()
 		if len(data) > 1:
 			if data[0] == 'f':
 				completed_uuid = data[(data.find(":")+1):]
@@ -34,11 +38,19 @@ class Echo(protocol.Protocol):
 			self.transport.write(pickled_string)
 		#else:
 		#	print "SERVER >>", data
-		#	self.transport.write(data)	
+		#	self.transport.write(data)
 	
+	#this function is to get around the 32bit native int barrier
+	#not needed in 64 native systems
+	def my_xrange(self,start, stop, step):
+		i = start
+		while i < stop:
+			yield i
+			i += step
+
 	def save_last_number_process(self, num):
 		f = open('last_repfibdigit.txt', "w")
-		f.write(num)
+		f.write(str(num))
 		f.close()
 
 	def get_last_number_process(self):
@@ -70,34 +82,70 @@ class Echo(protocol.Protocol):
 			
 	def monitor_work_units(self):
 			work_units = pickle.load( open( "work_units.p", "rb" ) )
-			last_number_process(self, num):
+			last_number = int(self.get_last_number_process())
+			print "last Num:", last_number	
 			# find_next_work_unit
-			uncompleted_count = 0
+			#print work_units
+			incompleted_count = 0
 			for index,next_unit in enumerate(work_units):
-				if next_unit[4] == False: uncompleted_count = uncompleted_count + 1
-			print "Work Units Not completed:", uncompleted_count
-			if uncompleted_count == 0: 
-				#create_work_units(starting_num=work_units[len(work_units)][1], block_size=10000, num_of_blocks=10)
-			#pickle.dump(work_units, open( "work_units.p", "wb" ) )
-				print "all units done"
-				sys.exit(-1)
-			return work_units[index]	
+				if next_unit[4] == False: incompleted_count = incompleted_count + 1
+			print "Incompleted Work Units:" , incompleted_count
+			if incompleted_count == 0: 
+				largest_num = work_units[len(work_units)-1][1]
+				print 'largest_num:', largest_num
+				self.save_last_number_process(largest_num)
+				self.create_work_units(starting_num=largest_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)  
+
+
+	#work unit [lower_num, upper_num, uuid, issued, completed]
+	def create_work_units(self, starting_num, block_size, num_of_blocks):
+		print starting_num, block_size, num_of_blocks
+		print "Creating New Work Unit Group"
+		chunks = (block_size/num_of_blocks)
+		#print "chunks:", chunks
+		work_units =[]
+		high = (starting_num + block_size)
+		print starting_num, high, chunks
+		for i in self.my_xrange(starting_num, high , chunks):
+			the_range = [i, (i + chunks) ]
+			print the_range, the_range[0], the_range[1]
+			#print "range:", the_range 
+			work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False])
+		pickle.dump(work_units, open( "work_units.p", "wb" ) )
+		print work_units
+		#sys.exit(-1)
+		return
+
+#this function is to get around the 32bit native int barrier
+#not needed in 64 native systems
+def my_xrange(start, stop, step):
+	i = start
+	while i < stop:
+		yield i
+		i += step
+
 
 
 #work unit [lower_num, upper_num, uuid, issued, completed]
 def create_work_units(starting_num, block_size, num_of_blocks):
-	#f = open('next_repfibdigit.txt', "r+")
-	#f.write(str(num))
-	#f.close()
+	print starting_num, block_size, num_of_blocks
+	print "Creating New Work Unit Group"
 	chunks = (block_size/num_of_blocks)
+	#print "chunks:", chunks
 	work_units =[]
-	for i in xrange(starting_num, block_size, chunks):
-		the_range = [i, ((i + chunks)-1) ]
-		#print the_range, the_range[0], the_range[1]
-		print "range:", the_range 
+	for i in my_xrange(starting_num, (starting_num + block_size), chunks):
+		the_range = [i, (i + chunks) ]
+		print the_range, the_range[0], the_range[1]
+		#print "range:", the_range 
 		work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False])
-		
-	return work_units
+	pickle.dump(work_units, open( "work_units.p", "wb" ) )
+	print work_units
+	#sys.exit(-1)
+	return
+
+
+
+
 
 def main():
     """This runs the protocol on port 8000"""
@@ -108,9 +156,15 @@ def main():
 
 # this only runs if the module was *not* imported
 if __name__ == '__main__':
-	units = create_work_units(starting_num=1, block_size=10000, num_of_blocks=10)
-	print units
-	pickle.dump(units, open( "work_units.p", "wb" ) )
+	
+	f = open('last_repfibdigit.txt', "r")
+	last_num = int(f.read())
+	f.close()
+	if last_num == 1:
+		create_work_units(starting_num=1, block_size=global_block_size, num_of_blocks=global_num_of_blocks)
+	if last_num > 1:
+		create_work_units(starting_num=last_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)
+
 	main()
 
 
