@@ -64,6 +64,7 @@ class repfigtest(threading.Thread):
 		#else:
 		#	print number_to_test, " is NOT a Keith Number"
 		return
+
 	#this function is to get around the 32bit native int barrier
 	#not needed in 64 native systems
 	def my_xrange(self, start, stop, step):
@@ -87,7 +88,8 @@ class repfigtest(threading.Thread):
 				s.connect((SERVER, PORT))
 				break
 			except:
-				time.wait(.2)
+				print "connection failed."
+				time.sleep(1)
 				pass
 		msg = 'k:' + str(num)
 		print 'CLIENT reporting new keith number >> ', msg
@@ -109,7 +111,8 @@ def get_work_unit():
 			s.connect((SERVER, PORT))
 			break
 		except:
-			time.wait(.2)
+			print "connection failed."
+			time.sleep(1)
 			pass
 	msg = 'n'
 	print 'CLIENT >> ', msg
@@ -132,7 +135,8 @@ def report_work_completed(work_unit_uuid):
 			s.connect((SERVER, PORT))
 			break
 		except:
-			time.wait(.2)
+			print "connection failed."
+			time.sleep(1)
 			pass
 	msg = 'f:' + str(work_unit_uuid)
 	print 'CLIENT reporting work completed >> ', msg
