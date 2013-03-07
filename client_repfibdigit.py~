@@ -11,11 +11,14 @@ import cPickle as pickle
 import numpy as np
 #import cProfile
 import timeit
+import uuid
+
 ########################################################################
 
 SERVER = 'isotope11.selfip.com'
 #SERVER = ''
 PORT = 6666 
+pgbreak = "-----------------------------------------------"
 
 class repfigtest(threading.Thread):
 	"""Threaded RepFibDigit"""
@@ -23,18 +26,21 @@ class repfigtest(threading.Thread):
 	def __init__(self, queue):
 		threading.Thread.__init__(self)
 		self.queue = queue
+
 	#----------------------------------------------------------------------
 	def run(self):
 		while True:
 			# gets the number range to test from the queue
 			starting_number = self.queue.get()
 			#starting_number = int(self.get_next_chunk())
-			print 'queue:',  threading.current_thread()
+			print  
+			print "CLIENT ID:", clientID
+			print 'queue:',  str(threading.current_thread())[12:]; print;
 			print "Work unit search range:", starting_number
 
 			#test the number range
 			self.test_range(starting_number)
-			print 'finished work unit queue:',  threading.current_thread()
+			print 'finished work unit queue:',  str(threading.current_thread())[12:]
 			#print "completed: search range: ", starting_number
 
 			# send a signal to the queue that the job is done
@@ -84,64 +90,110 @@ class repfigtest(threading.Thread):
 		s = socket.socket()         # Create a socket object
 		while True:
 			try:
+				print pgbreak
 				print 'Connecting to to REPORT KEITH # FOUND!! ', SERVER, PORT
 				s.connect((SERVER, PORT))
 				break
 			except:
-				print "connection failed.
+				print "connection failed."
 				time.sleep(1)
 				pass
-		msg = 'k:' + str(num)
-		print 'CLIENT reporting new keith number >> ', msg
-		s.send(msg)
-		ack  = s.recv(1024)
+		while True:
+			try:
+				msg = 'k:' + str(num)
+				print 'CLIENT reporting new keith number >> ', msg
+				s.send(msg)
+				break
+			except:
+				print "waiting on repsonse from SERVER:"
+				time.sleep(.5)
+				pass
+		while True:
+			try:
+				ack  = s.recv(1024)
+				break
+			except:
+				print "waiting on acknowledgement from SERVER that KEITH number was recorded:"
+				time.sleep(.5)
+				pass
 		print 'SERVER >> ', ack
 		s.close                     # Close the socket when done
 		
 
 def get_work_unit():
-	print "Getting new work unit...."
 	#establish coms with server
 	s = socket.socket()         # Create a socket object
 	#host = socket.gethostname() # Get local machine name
 	#port = 8000                # Reserve a port for your service.
 	while True:
 		try:
+			print 
+			print "Getting new work unit...."
 			print 'Connecting to ', SERVER, PORT
 			s.connect((SERVER, PORT))
 			break
 		except:
-			print "connection failed.
+			print "connection failed."
 			time.sleep(1)
 			pass
-	msg = 'n'
-	print 'CLIENT >> ', msg
-	s.send(msg)
-	server_reponse = s.recv(1024)
+	while True:
+		try:
+			msg = 'n'
+			print 'CLIENT >> ', msg
+			s.send(msg)
+			break
+		except:
+			print "new work request failed...."
+			time.sleep(1)
+			pass
+	while True:
+		try:
+			server_reponse = s.recv(1024)
+			break
+		except:
+			print "waiting on repsonse from SERVER:"
+			time.sleep(.5)
+			pass
 	new_work_unit = pickle.loads(server_reponse)
 	print 'SERVER >> ', new_work_unit
 	s.close                     # Close the socket when done
 	return new_work_unit
 
-def report_work_completed(work_unit_uuid):
-	print "reporting work unit to server...."
+def report_work_completed(clientID, work_unit_uuid):
+	#print "reporting work unit to server...."
 	#establish coms with server
 	s = socket.socket()         # Create a socket object
 	#host = socket.gethostname() # Get local machine name
 	#port = 8000                # Reserve a port for your service.
 	while True:
 		try:
+			print
+			print "reporting work unit to server...."
 			print 'Connecting to ', SERVER, PORT
 			s.connect((SERVER, PORT))
 			break
 		except:
-			print "connection failed.
+			print "connection failed."
 			time.sleep(1)
 			pass
-	msg = 'f:' + str(work_unit_uuid)
-	print 'CLIENT reporting work completed >> ', msg
-	s.send(msg)
-	ack  = s.recv(1024)
+	while True:
+		try:
+			msg = 'f:' + clientID + "^" + str(work_unit_uuid)
+			s.send(msg)
+			print 'CLIENT reporting work completed >> ', msg
+			break
+		except:
+			print "CLIENT reporting work to SERVER failed...."
+			time.sleep(.5)
+			pass
+	while True:
+		try:
+			ack = s.recv(1024)
+			break
+		except:
+			print "waiting on acknowledgement from SERVER that work unit was recorded:"
+			time.sleep(.5)
+			pass
 	print 'SERVER >> ', ack
 	s.close                     # Close the socket when done
 ########################################################################
@@ -153,6 +205,7 @@ if __name__=="__main__":
 	#multiple threads slows app down
 	num_fetch_threads = 1
 	queue = Queue.Queue()
+	clientID = str(uuid.uuid1())
 
 	# create a thread pool and give them a queue
 	for i in range(num_fetch_threads):
@@ -177,7 +230,7 @@ if __name__=="__main__":
 		#raw_input()
 		for i in xrange(num_fetch_threads):
 			the_range = [( start_num + ( (chunks*(i+1)) - (chunks) )), ( start_num + (chunks * (i+1)))]
-			print the_range, the_range[0], the_range[1]
+			#print the_range, the_range[0], the_range[1]
 			#print "Work Unit range:", the_range 
 			#raw_input('next worker data')
 			queue.put(the_range)
@@ -186,11 +239,12 @@ if __name__=="__main__":
 
 		# Now wait for the queue to be empty, indicating that we have
 		# processed all of the downloads.
-		print '*** Main thread waiting'
+		#print '*** Main thread waiting'
 		queue.join()
-		report_work_completed(work_unit[2])
+		report_work_completed(clientID, work_unit[2])
 		#raw_input('next series')
-		print '-----------------------------------------------------'
+		print
 		print "completion time:", abs(nowtime - time.clock()) 
+		print pgbreak
 		
 		#raw_input()

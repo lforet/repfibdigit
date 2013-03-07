@@ -6,21 +6,38 @@ import cPickle as pickle
 import time
 import uuid
 import numpy as np
+import sys
+import os
+from itertools import groupby
 
 global_block_size=1000000
-global_num_of_blocks=100
+global_num_of_blocks=50
 SERVER = 'isotope11.selfip.com'
 PORT = 6666
+last =  7000000000000000000000005680000000
 
 class Echo(protocol.Protocol):
+	def __init__(self):
+		self.last_number_checked = self.get_last_number_process()
+		self.incompleted_count = 0
+		self.block_size = global_block_size
+		self.num_of_blocks = global_num_of_blocks
+		self.SERVER = SERVER
+		self.PORT = PORT
+
 	def dataReceived(self, data):
 		print "CLIENT >>", data
 		self.monitor_work_units()
+		self.update_display()
 		if len(data) > 1:
 			if data[0] == 'f':
-				completed_uuid = data[(data.find(":")+1):]
+				pos = data.index('^')
+				completed_uuid= data[(data.find("^")+1):]
+				clientID  = data[(data.find(":")+1):pos]
+				print "clientID=", clientID
 				print 'work unit recieved from CLIENT >> ', completed_uuid
-				self.record_work_unit_completed(completed_uuid)
+				#time.sleep(5)
+				self.record_work_unit_completed(clientID, completed_uuid)
 				self.transport.write('work recorded')	
 			if data[0] == 'k':
 				num = data[(data.find(":")+1):]
@@ -93,7 +110,7 @@ class Echo(protocol.Protocol):
 						if next_unit[3] == True and next_unit[4] == False:
 							work_unit_index_to_return = index
 							print "found unit issued but not completed sp reissuing unit", work_unit_index_to_return
-							print work_units
+							#print work_units
 							#raw_input()
 							break
 			else:
@@ -104,19 +121,38 @@ class Echo(protocol.Protocol):
 			#print "returning:", work_units[work_unit_index_to_return]
 			return work_units[work_unit_index_to_return]
 
-	def record_work_unit_completed(self, uuid):
+	def record_work_unit_completed(self, clientID, uuid):
 			work_units = pickle.load( open( "work_units.p", "rb" ) )
 			# find work unit with matching uuid
 			for index,next_unit in enumerate(work_units):
 				if next_unit[2] == uuid: break
 			#mark_work_unit_as_completed
 			work_units[index][4] = True
+			work_units[index][5] = clientID
 			pickle.dump(work_units, open( "work_units.p", "wb" ) )
 			return work_units[index]
+
+	def count_clients(self):
+		work_units = pickle.load( open( "work_units.p", "rb" ) )
+		clients = []
+		num_of_clients = 0
+		for index,next_unit in enumerate(work_units):
+			if next_unit[5] != None: clients.append(next_unit[5])
+		clients_dict = dict((g[0],len(list(g[1]))) for g in groupby(clients))
+		#for x in len(clients_dict):
 			
+
+		print "     clientID:  ",  "      # of Work Units completed: "
+		print "-------------------------------------------------"
+		for x in clients_dict.keys():
+			print x, " .......  ", clients_dict[x]
+		print "-------------------------------------------------"
+		print "                          Total Active Clients:", len(clients_dict)
+		#time.sleep(10)		
+
 	def monitor_work_units(self):
 			work_units = pickle.load( open( "work_units.p", "rb" ) )
-			last_number = int(self.get_last_number_process())
+			self.last_number_checked = int(self.get_last_number_process())
 			#print "last Num:", last_number	
 			# count issued:
 			
@@ -129,6 +165,7 @@ class Echo(protocol.Protocol):
 				if next_unit[4] == False: incompleted_count = incompleted_count + 1
 				if next_unit[3] == False: not_issued_count = not_issued_count + 1
 			print "Incompleted Work Units:" , incompleted_count
+			self.incompleted_count = incompleted_count
 			if incompleted_count == 1: print work_units
 			#if no incompleted units create new work block
 			if incompleted_count == 0 and not_issued_count == 0: 
@@ -137,7 +174,26 @@ class Echo(protocol.Protocol):
 				self.save_last_number_process(largest_num)
 				self.create_work_units(starting_num=largest_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)  
 
-
+	def update_display(self):
+		os.system("clear")
+		pgbreak = "-----------------------------------------------"
+		print pgbreak
+		print "Last number processed:", self.last_number_checked
+		print "Block Size:", self.block_size
+		print "Units per Block:", self.num_of_blocks
+		print "Incompleted Work Units:" , self.incompleted_count
+		self.count_clients()
+		f = open('found_repfibdigits.txt', "r")
+		print "KEITH NUMBERS:"
+		while True:
+			line=f.readline()
+			if not line: break
+			print line  
+		f.close() 
+		print; print "TRAFFIC:"
+		print pgbreak
+		
+		
 	#work unit [lower_num, upper_num, uuid, issued, completed]
 	def create_work_units(self, starting_num, block_size, num_of_blocks):
 		print starting_num, block_size, num_of_blocks
@@ -151,7 +207,7 @@ class Echo(protocol.Protocol):
 			the_range = [i, (i + chunks) ]
 			print the_range, the_range[0], the_range[1]
 			#print "range:", the_range 
-			work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False])
+			work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False, None])
 		pickle.dump(work_units, open( "work_units.p", "wb" ) )
 		print work_units
 		#sys.exit(-1)
@@ -178,7 +234,7 @@ def create_work_units(starting_num, block_size, num_of_blocks):
 		the_range = [i, (i + chunks) ]
 		print the_range, the_range[0], the_range[1]
 		#print "range:", the_range 
-		work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False])
+		work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False, None])
 	pickle.dump(work_units, open( "work_units.p", "wb" ) )
 	print work_units
 	#sys.exit(-1)
@@ -193,7 +249,7 @@ def main():
 
 # this only runs if the module was *not* imported
 if __name__ == '__main__':
-	
+
 	f = open('last_repfibdigit.txt', "r")
 	last_num = int(f.read())
 	f.close()
@@ -201,7 +257,7 @@ if __name__ == '__main__':
 		create_work_units(starting_num=1, block_size=global_block_size, num_of_blocks=global_num_of_blocks)
 	if last_num > 1:
 		create_work_units(starting_num=last_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)
-
+	
 	main()
 
  
