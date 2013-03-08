@@ -15,7 +15,7 @@ if sys.platform in ['win32','cygwin','win64']:
         name = "KeithNumClient",
         version = VERSION ,
         #  All executables are listed in the "scripts" argument
-        scripts = ["client_nonqued.py"],
+        scripts = ["client.py"],
         options = {"bdist_esky": {
                   "freezer_module":"py2exe",
                 }}
@@ -27,7 +27,7 @@ elif sys.platform == 'darwin':
     setup(
         name = "KeithNumClient",
         version = VERSION ,
-         scripts = ["client_nonqued.py"],
+         scripts = ["client.py"],
         options = {"bdist_esky": {
                     "freezer_module":"py2app"
                  }}
@@ -37,5 +37,5 @@ else:
         name = "KeithNumClient",
         version = VERSION ,
         #  All executables are listed in the "scripts" argument
-        scripts = ["client_nonqued.py"],
+        scripts = ["client.py"],
     )
