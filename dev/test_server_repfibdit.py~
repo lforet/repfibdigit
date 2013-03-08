@@ -183,7 +183,7 @@ class Echo(protocol.Protocol):
 		print "Units per Block:", self.num_of_blocks
 		print "Incompleted Work Units:" , self.incompleted_count
 		self.count_clients()
-		f = open('found_repfibdigits.txt', "r")
+		f = open('test_found_repfibdigits.txt', "r")
 		print "KEITH NUMBERS:"
 		while True:
 			line=f.readline()
