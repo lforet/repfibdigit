@@ -112,7 +112,7 @@ class Echo(protocol.Protocol):
 							break
 			else:
 				self.work_units[index1][3] = True
-				self.work_unit_index_to_return = index1
+				work_unit_index_to_return = index1
 			#print "storing work units"
 			pickle.dump(self.work_units, open( "work_units.p", "wb" ) )
 			#print "returning:", work_units[work_unit_index_to_return]
@@ -126,7 +126,7 @@ class Echo(protocol.Protocol):
 			#mark_work_unit_as_completed
 			self.work_units[index][4] = True
 			self.work_units[index][5] = clientID
-			pickle.dump(work_units, open( "work_units.p", "wb" ) )
+			pickle.dump(self.work_units, open( "work_units.p", "wb" ) )
 			return self.work_units[index]
 
 	def count_clients(self):
