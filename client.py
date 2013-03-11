@@ -10,6 +10,13 @@ import timeit
 import uuid
 import sys
 
+UPDATE_SERVER = "http://isotope11.selfip.com:6667"
+#SERVER = ''
+SERVER = 'isotope11.selfip.com'
+#PORT = 5555
+PORT = 6666
+pgbreak = "-----------------------------------------------"
+
 ########################################################################
 import esky
 from esky.util import appdir_from_executable
@@ -31,7 +38,7 @@ def appexe_from_executable(exepath):
 
 def initialize_client():
 	#handled auto-update stuff
-	app = esky.Esky(sys.executable, "http://isotope11.selfip.com:8000")
+	app = esky.Esky(sys.executable, UPDATE_SERVER)
 	print "You are running Client version: %s" % app.active_version
 	print "checking for client update..."
 	time.sleep(2)
@@ -56,12 +63,6 @@ def initialize_client():
 		restart_this_app()
 
 ########################################################################
-#SERVER = ''
-SERVER = 'isotope11.selfip.com'
-#PORT = 5555
-PORT = 6666
-pgbreak = "-----------------------------------------------"
-
 
 #----------------------------------------------------------------------
 def is_repfibdigit( number_to_test):
