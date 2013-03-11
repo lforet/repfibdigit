@@ -24,9 +24,11 @@ class Echo(protocol.Protocol):
 		self.num_of_blocks = global_num_of_blocks
 		self.SERVER = SERVER
 		self.PORT = PORT
+		self.work_units = None
 
 	def dataReceived(self, data):
 		print "CLIENT >>", data
+		self.work_units = pickle.load( open( "work_units.p", "rb" ) )
 		self.monitor_work_units()
 		self.update_display()
 		if len(data) > 1:
@@ -77,66 +79,61 @@ class Echo(protocol.Protocol):
 		return data
 
 	def issue_work_unit(self):
-			work_units = pickle.load( open( "work_units.p", "rb" ) )
+			#work_units = pickle.load( open( "work_units.p", "rb" ) )
 			work_unit_index_to_return = 0
 			# find_next_work_unit
-			for index1,next_unit in enumerate(work_units):
+			for index1,next_unit in enumerate(self.work_units):
 				if next_unit[3] == False: break
-			#print "index:", index1+1, "  len(work_unit)", len(work_units)
-			#if index1 == 8: 
-			#	print "test: marking 4th wu as issued but not completed"
-			#	work_units[3][4] = False
-			#	print work_units[3][4] 
-			#	print work_units
-			#	raw_input()
-			num_work_units = len(work_units)
-			#print "index:", index1+1, "  len(work_unit)", len(work_units)
+
+			num_work_units = len(self.work_units)
+
 			#count wu issued
 			wu_issued = 0
-			for i,next_unit in enumerate(work_units):
+			for i,next_unit in enumerate(self.work_units):
 				if next_unit[3] == True: wu_issued = wu_issued +1
 			if wu_issued == num_work_units:
 				print "ALL work units issues in unit block"
 				#check for all completed
 				completed_count = 0
 				issued_count = 0
-				for index,next_unit in enumerate(work_units):
+				for index,next_unit in enumerate(self.work_units):
 					if next_unit[4] == True: completed_count = completed_count + 1
 					if next_unit[3] == True: issued_count = issued_count + 1
 				print "completed_count:", completed_count, "  issued_count:", issued_count 
 				#IF DONT MATCH REISSUE non-completed work units
 				if issued_count != completed_count:
-					for index,next_unit in enumerate(work_units):
+					for index,next_unit in enumerate(self.work_units):
 						if next_unit[3] == True and next_unit[4] == False:
 							work_unit_index_to_return = index
-							print "found unit issued but not completed sp reissuing unit", work_unit_index_to_return
+							print "found unit issued but not completed...... reissuing unit", work_unit_index_to_return
+							time.sleep(.2)
 							#print work_units
 							#raw_input()
 							break
 			else:
-				work_units[index1][3] = True
-				work_unit_index_to_return = index1
+				self.work_units[index1][3] = True
+				self.work_unit_index_to_return = index1
 			#print "storing work units"
-			pickle.dump(work_units, open( "work_units.p", "wb" ) )
+			pickle.dump(self.work_units, open( "work_units.p", "wb" ) )
 			#print "returning:", work_units[work_unit_index_to_return]
-			return work_units[work_unit_index_to_return]
+			return self.work_units[work_unit_index_to_return]
 
 	def record_work_unit_completed(self, clientID, uuid):
-			work_units = pickle.load( open( "work_units.p", "rb" ) )
+			#work_units = pickle.load( open( "work_units.p", "rb" ) )
 			# find work unit with matching uuid
-			for index,next_unit in enumerate(work_units):
+			for index,next_unit in enumerate(self.work_units):
 				if next_unit[2] == uuid: break
 			#mark_work_unit_as_completed
-			work_units[index][4] = True
-			work_units[index][5] = clientID
+			self.work_units[index][4] = True
+			self.work_units[index][5] = clientID
 			pickle.dump(work_units, open( "work_units.p", "wb" ) )
-			return work_units[index]
+			return self.work_units[index]
 
 	def count_clients(self):
-		work_units = pickle.load( open( "work_units.p", "rb" ) )
+		#work_units = pickle.load( open( "work_units.p", "rb" ) )
 		clients = []
 		num_of_clients = 0
-		for index,next_unit in enumerate(work_units):
+		for index,next_unit in enumerate(self.work_units):
 			if next_unit[5] != None: clients.append(next_unit[5])
 		clients_dict = dict((g[0],len(list(g[1]))) for g in groupby(clients))
 		#for x in len(clients_dict):
@@ -151,25 +148,21 @@ class Echo(protocol.Protocol):
 		#time.sleep(10)		
 
 	def monitor_work_units(self):
-			work_units = pickle.load( open( "work_units.p", "rb" ) )
+			#work_units = pickle.load( open( "work_units.p", "rb" ) )
 			self.last_number_checked = int(self.get_last_number_process())
-			#print "last Num:", last_number	
-			# count issued:
-			
-			# find_next_work_unit
-			#print work_units
+
 			#count incompleted units
 			incompleted_count = 0
 			not_issued_count = 0
-			for index,next_unit in enumerate(work_units):
+			for index,next_unit in enumerate(self.work_units):
 				if next_unit[4] == False: incompleted_count = incompleted_count + 1
 				if next_unit[3] == False: not_issued_count = not_issued_count + 1
 			print "Incompleted Work Units:" , incompleted_count
 			self.incompleted_count = incompleted_count
-			if incompleted_count == 1: print work_units
+			if incompleted_count == 1: print self.work_units
 			#if no incompleted units create new work block
 			if incompleted_count == 0 and not_issued_count == 0: 
-				largest_num = work_units[len(work_units)-1][1]
+				largest_num = work_units[len(self.work_units)-1][1]
 				#print 'largest_num:', largest_num
 				self.save_last_number_process(largest_num)
 				self.create_work_units(starting_num=largest_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)  

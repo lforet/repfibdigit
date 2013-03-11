@@ -5,7 +5,7 @@ from distutils.core import setup
 # for windows
 # > python setup.py bdist_esky
 
-VERSION = "1.2"
+VERSION = "1.21"
 SCRIPT = "client.py"
 
 if sys.platform in ['win32','cygwin','win64']:

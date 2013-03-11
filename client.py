@@ -165,12 +165,12 @@ def get_work_unit():
 	while True:
 		try:
 			server_reponse = s.recv(1024)
+			new_work_unit = pickle.loads(server_reponse)
 			break
 		except:
-			print "waiting on repsonse from SERVER:"
+			print "waiting on new work unit from SERVER:"
 			time.sleep(.5)
 			pass
-	new_work_unit = pickle.loads(server_reponse)
 	print 'SERVER >> ', new_work_unit
 	s.close                     # Close the socket when done
 	return new_work_unit
