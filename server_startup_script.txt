@@ -1,0 +1,44 @@
+#create screens
+screen -dmS repfibserver
+sleep 1
+screen -dmS softwareserver
+sleep 1
+screen -dmS client1
+sleep 1
+screen -dmS webserver
+
+screen -S repfibserver -p 0 -X stuff 'cd /home/ubuntu/repfibdigit/'
+screen -S repfibserver -p 0 -X stuff "$(printf \\r)"
+sleep 1
+screen -S repfibserver -p 0 -X stuff 'python server_repfibdit.py'
+screen -S repfibserver -p 0 -X stuff "$(printf \\r)"
+sleep 1
+
+
+#startup webserver
+screen -S webserver -p 0 -X stuff 'cd /home/ubuntu/repfibdigit/'
+screen -S webserver -p 0 -X stuff "$(printf \\r)"
+sleep 1
+screen -S webserver -p 0 -X stuff 'python -m SimpleHTTPServer 6668'
+screen -S webserver -p 0 -X stuff "$(printf \\r)"
+sleep 1
+
+
+#start software update server
+screen -S softwareserver -p 0 -X stuff 'cd /home/ubuntu/repfibdigit/dist/'
+screen -S softwareserver -p 0 -X stuff "$(printf \\r)"
+sleep 1
+screen -S softwareserver -p 0 -X stuff 'python -m SimpleHTTPServer 6667'
+screen -S softwareserver -p 0 -X stuff "$(printf \\r)"
+sleep 1
+screen -S client1 -p 0 -X stuff 'cd /home/ubuntu/'
+screen -S client1 -p 0 -X stuff "$(printf \\r)"
+sleep 1
+screen -S client1 -p 0 -X stuff './client &'
+screen -S client1 -p 0 -X stuff "$(printf \\r)"
+sleep 1
+screen -S client1 -p 0 -X stuff './client &'
+screen -S client1 -p 0 -X stuff "$(printf \\r)"
+sleep 1
+screen -S client1 -p 0 -X stuff './client &'
+screen -S client1 -p 0 -X stuff "$(printf \\r)"
