@@ -3,18 +3,22 @@
 import socket              
 import os
 import time
-import itertools
+#import itertools
 import cPickle as pickle
 import numpy as np
-import timeit
+#import timeit
 import uuid
 import sys
 
 UPDATE_SERVER = "http://isotope11.selfip.com:6667"
+#testing server
 #SERVER = ''
-SERVER = 'isotope11.selfip.com'
 #PORT = 5555
+
+#production server
+SERVER = 'isotope11.selfip.com'
 PORT = 6666
+
 pgbreak = "-----------------------------------------------"
 
 ########################################################################
@@ -38,29 +42,48 @@ def appexe_from_executable(exepath):
 
 def initialize_client():
 	#handled auto-update stuff
-	app = esky.Esky(sys.executable, UPDATE_SERVER)
-	print "You are running Client version: %s" % app.active_version
-	print "checking for client update..."
-	time.sleep(2)
-	if app.find_update() == None:
-		print "no update available..."
-		time.sleep(2)
+	while True:
+		try:
+			app = esky.Esky(sys.executable, UPDATE_SERVER)
+			print "You are running Client version: %s" % app.active_version
+			print "checking for client update..."
+			time.sleep(2)
+			break
+		except:
+			print "connection failed."
+			time.sleep(1)
+			pass
+	try:
+		if app.find_update() == None:
+			print "no update available..."
+			time.sleep(2)
+	except:
+		print "update connection failed."
+		time.sleep(1)
+		pass
 	#print "Update available....", app.find_update(), app.active_version
 	#raw_input()
-	if app.find_update() != None:
-		print "Update available....", app.find_update()
-		print "SuperUser permission required to update..."
-		if app.has_root() == False:
-			 app.get_root()
-		print "auto-updating..."
+	while True:
 		try:
-			app.auto_update()
-		except Exception, e:
-			print "ERROR UPDATING APP:", e
-		app.reinitialize()
-		print "restarting with new client..."
-		time.sleep(3)
-		restart_this_app()
+			if app.find_update() != None:
+				print "Update available....", app.find_update()
+				print "SuperUser permission required to update..."
+				if app.has_root() == False:
+					 app.get_root()
+				print "auto-updating..."
+				try:
+					app.auto_update()
+				except Exception, e:
+					print "ERROR UPDATING APP:", e
+				app.reinitialize()
+				print "restarting with new client..."
+				time.sleep(3)
+				restart_this_app()
+				break
+		except:
+			print "update connection failed."
+			time.sleep(1)
+			pass
 
 ########################################################################
 
@@ -103,112 +126,65 @@ def test_range( the_range):
 
 def report_keith_num( num):
 	#establish coms with server
-	s = socket.socket()         # Create a socket object
 	while True:
 		try:
+			s = socket.socket()         # Create a socket object
 			print pgbreak
-			print 'Connecting to to REPORT KEITH # FOUND!! ', SERVER, PORT
+			print 'Connecting to to REPORT KEITH # FOUND!! '
 			s.connect((SERVER, PORT))
-			break
-		except:
-			print "connection failed."
-			time.sleep(1)
-			pass
-	while True:
-		try:
 			msg = 'k:' + str(num)
 			print 'CLIENT reporting new keith number >> ', msg
 			s.send(msg)
+			ack = s.recv(1024)
 			break
 		except:
-			print "waiting on repsonse from SERVER:"
-			time.sleep(.5)
-			pass
-	while True:
-		try:
-			ack  = s.recv(1024)
-			break
-		except:
-			print "waiting on acknowledgement from SERVER that KEITH number was recorded:"
-			time.sleep(.5)
+			print "reporting KEITHNUM: waiting on repsonse from SERVER:"
+			time.sleep(1)
 			pass
 	print 'SERVER >> ', ack
 	s.close                     # Close the socket when done
 		
 
 def get_work_unit():
-	#establish coms with server
-	s = socket.socket()         # Create a socket object
-	#host = socket.gethostname() # Get local machine name
-	#port = 8000                # Reserve a port for your service.
 	while True:
 		try:
+			#establish coms with server
+			s = socket.socket() 
 			print 
 			print "Getting new work unit...."
-			print 'Connecting to ', SERVER, PORT
+			#print 'Connecting to ', SERVER, PORT
 			s.connect((SERVER, PORT))
-			break
-		except:
-			print "connection failed."
-			time.sleep(1)
-			pass
-	while True:
-		try:
 			msg = 'n'
 			print 'CLIENT >> ', msg
 			s.send(msg)
-			break
-		except:
-			print "new work request failed...."
-			time.sleep(1)
-			pass
-	while True:
-		try:
 			server_reponse = s.recv(1024)
 			new_work_unit = pickle.loads(server_reponse)
 			break
 		except:
-			print "waiting on new work unit from SERVER:"
-			time.sleep(.5)
+			print "requesting new Work Unit from SERVER:"
+			time.sleep(1)
 			pass
 	print 'SERVER >> ', new_work_unit
 	s.close                     # Close the socket when done
 	return new_work_unit
 
-def report_work_completed(clientID, work_unit_uuid):
-	#print "reporting work unit to server...."
-	#establish coms with server
-	s = socket.socket()         # Create a socket object
-	#host = socket.gethostname() # Get local machine name
-	#port = 8000                # Reserve a port for your service.
+def report_work_completed(clientID, work_unit_uuid):     
 	while True:
 		try:
-			print
+			#print "reporting work unit to server...."
+			#establish coms with server
+			s = socket.socket()    
 			print "reporting work unit to server...."
-			print 'Connecting to ', SERVER, PORT
+			#print 'Connecting to ', SERVER, PORT
 			s.connect((SERVER, PORT))
-			break
-		except:
-			print "connection failed."
-			time.sleep(1)
-			pass
-	while True:
-		try:
 			msg = 'f:' + clientID + "^" + str(work_unit_uuid)
 			s.send(msg)
-			print 'CLIENT reporting work completed >> ', msg
-			break
-		except:
-			print "CLIENT reporting work to SERVER failed...."
-			time.sleep(.5)
-			pass
-	while True:
-		try:
 			ack = s.recv(1024)
+			print 'CLIENT reporting work completed >> ', ack
 			break
 		except:
 			print "waiting on acknowledgement from SERVER that work unit was recorded:"
-			time.sleep(.5)
+			time.sleep(1)
 			pass
 	print 'SERVER >> ', ack
 	s.close                     # Close the socket when done
@@ -221,7 +197,9 @@ if __name__=="__main__":
 
 	# Set up some global variables
 	clientID = str(uuid.uuid1())
+	completed_wu = 0
 	while True:
+		#os.system("clear")
 		print pgbreak
 		nowtime = time.clock()
 		# get num to work from
@@ -229,8 +207,9 @@ if __name__=="__main__":
 		the_range = (int(work_unit[0]), int(work_unit[1])+1)
 		test_range(the_range)
 		report_work_completed(clientID, work_unit[2])
-		print
-		print "completion time:", abs(nowtime - time.clock()) 
-		print pgbreak
+		completed_wu = completed_wu + 1
+		print 
+		print "Work Unit completion time:", abs(nowtime - time.clock()) 
+		print "Total Completed Work Units:", completed_wu
 		#raw_input()
 

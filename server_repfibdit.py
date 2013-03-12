@@ -141,18 +141,9 @@ class Echo(protocol.Protocol):
 		num_of_clients = 0
 		for index,next_unit in enumerate(self.work_units):
 			if next_unit[5] != None: clients.append(next_unit[5])
-		#clients_dict = dict((g[0],len(list(g[1]))) for g in groupby(clients))
-		#clients_dict = dict((g[0],len(list(g[1]))) for g in clients)
-		#for x in len(clients_dict):
 		clients_sorted = self.dupli(clients)
-		print "     clientID:  ",  "      # of Work Units completed: "
-		print "-------------------------------------------------"
-		for x in clients_sorted:
-			print x[0] , " .......  " , x[1]
-		print "-------------------------------------------------"
-		print "                          Total Active Clients:", len(clients_sorted)
-
-		#time.sleep(10)		
+		return clients_sorted
+	
 
 	def monitor_work_units(self):
 			#work_units = pickle.load( open( "work_units.p", "rb" ) )
@@ -179,13 +170,25 @@ class Echo(protocol.Protocol):
 
 	def update_display(self):
 		os.system("clear")
+		web_page_end ='''
+		</HTML>
+		'''
+		new_html_page = '''
+		<HTML>
+		<meta http-equiv="refresh" content="1" > 
+		'''
 		pgbreak = "-----------------------------------------------"
+		webbreak = 	"-------------------------------------------------------------------------------<br>"
 		print pgbreak
-		print "Last number processed:", self.last_number_checked
-		print "Block Size:", self.block_size
-		print "Units per Block:", self.num_of_blocks
-		print "Incompleted Work Units:" , self.incompleted_count
-		self.count_clients()
+		new_html_page = new_html_page + webbreak
+		print "Last Block: ", self.last_number_checked
+		new_html_page = new_html_page + "Last Block: " + str(self.last_number_checked)+ "<br>"
+		print "Block Size: ", self.block_size
+		new_html_page = new_html_page + "Block Size:  " + str(self.block_size) + "<br>"
+		print "Units per Block: ", self.num_of_blocks
+		new_html_page = new_html_page + "Units per Block:  " + str(self.num_of_blocks) + "<br>"
+		print "Remaining Work Units:" , self.incompleted_count
+		new_html_page = new_html_page + "Remaining Work Units: "+ str(self.incompleted_count)+ "<br>"
 		f = open('found_repfibdigits.txt', "r")
 		print "KEITH NUMBERS:"
 		while True:
@@ -193,11 +196,29 @@ class Echo(protocol.Protocol):
 			if not line: break
 			print line  
 		f.close() 
+
+		client_count = self.count_clients()
+		print "clientID:             # of Work Units completed: "
+		new_html_page = new_html_page + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clientID:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Units completed: " + "<br>"
+		print "-------------------------------------------------"
+		new_html_page = new_html_page + webbreak
+		for x in client_count:
+			print x[0] , " .......  " , x[1]
+			new_html_page = new_html_page + x[0] + " .......  " + str(x[1]) + "<br>"
+		print "-------------------------------------------------"
+		new_html_page = new_html_page + webbreak
+		print "                          Total Active Clients: ", len(client_count)
+		new_html_page = new_html_page + "                          Total Active Clients:" + str(len(client_count)) + "<br>"
+
+
 		print; print "TRAFFIC:"
 		print pgbreak
+		new_html_page = new_html_page +  web_page_end
+		f_handle = open('index.html', 'w')
+		f_handle.write(str(new_html_page))
+		f_handle.close()
 		
 
-		
 	#work unit [lower_num, upper_num, uuid, issued, completed]
 	def create_work_units(self, starting_num, block_size, num_of_blocks):
 		print starting_num, block_size, num_of_blocks
@@ -262,4 +283,3 @@ if __name__ == '__main__':
 	main()
 
  
-	
