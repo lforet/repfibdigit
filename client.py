@@ -10,13 +10,13 @@ import numpy as np
 import uuid
 import sys
 
-UPDATE_SERVER = "http://isotope11.selfip.com:6667"
+UPDATE_SERVER = "http://repfibdigit.isotope11.com:6667"
 #testing server
 #SERVER = ''
 #PORT = 5555
 
 #production server
-SERVER = 'isotope11.selfip.com'
+SERVER = 'http://repfibdigit.isotope11.com'
 PORT = 6666
 
 pgbreak = "-----------------------------------------------"
