@@ -206,7 +206,7 @@ class Echo(protocol.Protocol):
 		new_html_page = new_html_page + webbreak
 		for x in client_count:
 			print x[0] , " .......  " , x[1]
-			new_html_page = new_html_page + x[0] + " ..........  " + str(x[1]) + "<br>"
+			new_html_page = new_html_page + x[0] + " .......  " + str(x[1]) + "<br>"
 		print "-------------------------------------------------"
 		new_html_page = new_html_page + webbreak
 		print "                          Total Active Clients: ", len(client_count)
