@@ -55,9 +55,6 @@ class Echo(protocol.Protocol):
 			print "SERVER >>", work_unit_to_send 
 			pickled_string = pickle.dumps(work_unit_to_send)
 			self.transport.write(pickled_string)
-		#else:
-		#	print "SERVER >>", data
-		#	self.transport.write(data)
 	
 	#this function is to get around the 32bit native int barrier
 	#not needed in 64 native systems
@@ -127,7 +124,7 @@ class Echo(protocol.Protocol):
 			self.work_units[index][4] = True
 			self.work_units[index][5] = clientID
 			pickle.dump(self.work_units, open( "work_units.p", "wb" ) )
-			return self.work_units[index]
+			#return self.work_units[index]
 
 	def count_clients(self):
 		#work_units = pickle.load( open( "work_units.p", "rb" ) )
@@ -138,7 +135,6 @@ class Echo(protocol.Protocol):
 		clients_dict = dict((g[0],len(list(g[1]))) for g in groupby(clients))
 		#for x in len(clients_dict):
 			
-
 		print "     clientID:  ",  "      # of Work Units completed: "
 		print "-------------------------------------------------"
 		for x in clients_dict.keys():
@@ -162,8 +158,8 @@ class Echo(protocol.Protocol):
 			if incompleted_count == 1: print self.work_units
 			#if no incompleted units create new work block
 			if incompleted_count == 0 and not_issued_count == 0: 
-				largest_num = work_units[len(self.work_units)-1][1]
-				#print 'largest_num:', largest_num
+				largest_num = self.work_units[len(self.work_units)-1][1]
+				print 'largest_num:', largest_num
 				self.save_last_number_process(largest_num)
 				self.create_work_units(starting_num=largest_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)  
 
@@ -204,7 +200,7 @@ class Echo(protocol.Protocol):
 		pickle.dump(work_units, open( "work_units.p", "wb" ) )
 		print work_units
 		#sys.exit(-1)
-		return
+		#return
 
 #this function is to get around the 32bit native int barrier
 #not needed in 64 native systems
@@ -213,8 +209,6 @@ def my_xrange(start, stop, step):
 	while i < stop:
 		yield i
 		i += step
-
-
 
 #work unit [lower_num, upper_num, uuid, issued, completed]
 def create_work_units(starting_num, block_size, num_of_blocks):
@@ -231,7 +225,7 @@ def create_work_units(starting_num, block_size, num_of_blocks):
 	pickle.dump(work_units, open( "work_units.p", "wb" ) )
 	print work_units
 	#sys.exit(-1)
-	return
+	#return
 
 
 def main():
@@ -246,8 +240,6 @@ if __name__ == '__main__':
 	f = open('last_repfibdigit.txt', "r")
 	last_num = int(f.read())
 	f.close()
-	if last_num == 1:
-		create_work_units(starting_num=1, block_size=global_block_size, num_of_blocks=global_num_of_blocks)
 	if last_num > 1:
 		create_work_units(starting_num=last_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)
 	
