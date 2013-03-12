@@ -10,7 +10,7 @@ import sys
 import os
 from itertools import groupby
 
-global_block_size=1000000
+global_block_size=10000
 global_num_of_blocks=10
 SERVER = ''
 PORT = 5555
@@ -18,15 +18,19 @@ last =  7000000000000000000000005680000000
 
 class Echo(protocol.Protocol):
 	def __init__(self):
-		#self.last_number_checked = self.get_last_number_process()
+		self.last_number_checked = self.get_last_number_process()
 		self.incompleted_count = 0
 		self.block_size = global_block_size
 		self.num_of_blocks = global_num_of_blocks
 		self.SERVER = SERVER
 		self.PORT = PORT
+		self.work_units = None
 
 	def dataReceived(self, data):
 		print "CLIENT >>", data
+		self.work_units = pickle.load( open( "work_units.p", "rb" ) )
+                #print 'data received..press enter to load work units', self.work_units
+                #raw_input()
 		self.monitor_work_units()
 		self.update_display()
 		if len(data) > 1:
@@ -41,7 +45,7 @@ class Echo(protocol.Protocol):
 				self.transport.write('work recorded')	
 			if data[0] == 'k':
 				num = data[(data.find(":")+1):]
-				f = open('test_found_repfibdigits.txt', "a")
+				f = open('found_repfibdigits.txt', "a")
 				f.write(num)
 				f.write('\n')
 				f.close()
@@ -53,9 +57,6 @@ class Echo(protocol.Protocol):
 			print "SERVER >>", work_unit_to_send 
 			pickled_string = pickle.dumps(work_unit_to_send)
 			self.transport.write(pickled_string)
-		#else:
-		#	print "SERVER >>", data
-		#	self.transport.write(data)
 	
 	#this function is to get around the 32bit native int barrier
 	#not needed in 64 native systems
@@ -66,152 +67,177 @@ class Echo(protocol.Protocol):
 			i += step
 
 	def save_last_number_process(self, num):
-		f = open('test_last_repfibdigit.txt', "w")
+		f = open('last_repfibdigit.txt', "w")
 		f.write(str(num))
 		f.close()
 
 	def get_last_number_process(self):
-		f = open('test_last_repfibdigit.txt', "r")
+		f = open('last_repfibdigit.txt', "r")
 		data = f.read()
 		f.close()
 		return data
 
 	def issue_work_unit(self):
-			work_units = pickle.load( open( "test_work_units.p", "rb" ) )
+			#work_units = pickle.load( open( "work_units.p", "rb" ) )
 			work_unit_index_to_return = 0
 			# find_next_work_unit
-			for index1,next_unit in enumerate(work_units):
+			for index1,next_unit in enumerate(self.work_units):
 				if next_unit[3] == False: break
-			#print "index:", index1+1, "  len(work_unit)", len(work_units)
-			#if index1 == 8: 
-			#	print "test: marking 4th wu as issued but not completed"
-			#	work_units[3][4] = False
-			#	print work_units[3][4] 
-			#	print work_units
-			#	raw_input()
-			num_work_units = len(work_units)
-			#print "index:", index1+1, "  len(work_unit)", len(work_units)
+
+			num_work_units = len(self.work_units)
+
 			#count wu issued
 			wu_issued = 0
-			for i,next_unit in enumerate(work_units):
+			for i,next_unit in enumerate(self.work_units):
 				if next_unit[3] == True: wu_issued = wu_issued +1
 			if wu_issued == num_work_units:
 				print "ALL work units issues in unit block"
 				#check for all completed
 				completed_count = 0
 				issued_count = 0
-				for index,next_unit in enumerate(work_units):
+				for index,next_unit in enumerate(self.work_units):
 					if next_unit[4] == True: completed_count = completed_count + 1
 					if next_unit[3] == True: issued_count = issued_count + 1
-				print "completed_count:", completed_count, "  issued_count:", issued_count 
+				#print "completed_count:", completed_count, "  issued_count:", issued_count 
 				#IF DONT MATCH REISSUE non-completed work units
 				if issued_count != completed_count:
-					for index,next_unit in enumerate(work_units):
+					for index,next_unit in enumerate(self.work_units):
 						if next_unit[3] == True and next_unit[4] == False:
 							work_unit_index_to_return = index
-							print "found unit issued but not completed sp reissuing unit", work_unit_index_to_return
+							print "found unit issued but not completed...... reissuing unit", work_unit_index_to_return
+							time.sleep(.2)
 							#print work_units
 							#raw_input()
 							break
 			else:
-				work_units[index1][3] = True
+				self.work_units[index1][3] = True
 				work_unit_index_to_return = index1
 			#print "storing work units"
-			pickle.dump(work_units, open( "test_work_units.p", "wb" ) )
+			pickle.dump(self.work_units, open( "work_units.p", "wb" ) )
 			#print "returning:", work_units[work_unit_index_to_return]
-			return work_units[work_unit_index_to_return]
+			return self.work_units[work_unit_index_to_return]
 
 	def record_work_unit_completed(self, clientID, uuid):
-			work_units = pickle.load( open( "test_work_units.p", "rb" ) )
+			#work_units = pickle.load( open( "work_units.p", "rb" ) )
 			# find work unit with matching uuid
-			for index,next_unit in enumerate(work_units):
+			for index,next_unit in enumerate(self.work_units):
 				if next_unit[2] == uuid: break
 			#mark_work_unit_as_completed
-			work_units[index][4] = True
-			work_units[index][5] = clientID
-			pickle.dump(work_units, open( "test_work_units.p", "wb" ) )
-			return work_units[index]
+			self.work_units[index][4] = True
+			self.work_units[index][5] = clientID
+			pickle.dump(self.work_units, open( "work_units.p", "wb" ) )
+			#return self.work_units[index]
+
+	def dupli(self, the_list):
+    		count = the_list.count # this optimization added courtesy of Sven's comment
+    		result = [(item, count(item)) for item in set(the_list)]
+    		result.sort()
+    		return result
+
 
 	def count_clients(self):
-		work_units = pickle.load( open( "test_work_units.p", "rb" ) )
+		#work_units = pickle.load( open( "work_units.p", "rb" ) )
 		clients = []
 		num_of_clients = 0
-		for index,next_unit in enumerate(work_units):
+		for index,next_unit in enumerate(self.work_units):
 			if next_unit[5] != None: clients.append(next_unit[5])
-		clients_dict = dict((g[0],len(list(g[1]))) for g in groupby(clients))
-		#for x in len(clients_dict):
-			
-
-		print "     clientID:  ",  "      # of Work Units completed: "
-		print "-------------------------------------------------"
-		for x in clients_dict.keys():
-			print x, " .......  ", clients_dict[x]
-		print "-------------------------------------------------"
-		print "                          Total Active Clients:", len(clients_dict)
-		#time.sleep(10)		
+		clients_sorted = self.dupli(clients)
+		return clients_sorted
+	
 
 	def monitor_work_units(self):
-			work_units = pickle.load( open( "test_work_units.p", "rb" ) )
+			#work_units = pickle.load( open( "work_units.p", "rb" ) )
 			self.last_number_checked = int(self.get_last_number_process())
-			#print "last Num:", last_number	
-			# count issued:
-			
-			# find_next_work_unit
-			#print work_units
+
 			#count incompleted units
 			incompleted_count = 0
 			not_issued_count = 0
-			for index,next_unit in enumerate(work_units):
+			for index,next_unit in enumerate(self.work_units):
 				if next_unit[4] == False: incompleted_count = incompleted_count + 1
 				if next_unit[3] == False: not_issued_count = not_issued_count + 1
-			print "Incompleted Work Units:" , incompleted_count
+			#print "Incompleted Work Units:" , incompleted_count
 			self.incompleted_count = incompleted_count
-			if incompleted_count == 1: print work_units
+			if incompleted_count == 1: print self.work_units
 			#if no incompleted units create new work block
 			if incompleted_count == 0 and not_issued_count == 0: 
-				largest_num = work_units[len(work_units)-1][1]
+				largest_num = self.work_units[len(self.work_units)-1][1]
 				#print 'largest_num:', largest_num
+				#print 'press enter to create new work block'
+				#time.sleep(1)
+				#raw_input()
 				self.save_last_number_process(largest_num)
 				self.create_work_units(starting_num=largest_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)  
 
 	def update_display(self):
 		os.system("clear")
+		web_page_end ='''
+		</HTML>
+		'''
+		new_html_page = '''
+		<HTML>
+		<meta http-equiv="refresh" content="1" > 
+		'''
 		pgbreak = "-----------------------------------------------"
+		webbreak = 	"-------------------------------------------------------------------------------<br>"
 		print pgbreak
-		print "Last number processed:", self.last_number_checked
-		print "Block Size:", self.block_size
-		print "Units per Block:", self.num_of_blocks
-		print "Incompleted Work Units:" , self.incompleted_count
-		self.count_clients()
-		f = open('test_found_repfibdigits.txt', "r")
+		new_html_page = new_html_page + webbreak
+		print "Last Block: ", self.last_number_checked
+		new_html_page = new_html_page + "Last Block: " + str(self.last_number_checked)+ "<br>"
+		print "Block Size: ", self.block_size
+		new_html_page = new_html_page + "Block Size:  " + str(self.block_size) + "<br>"
+		print "Units per Block: ", self.num_of_blocks
+		new_html_page = new_html_page + "Units per Block:  " + str(self.num_of_blocks) + "<br>"
+		print "Remaining Work Units:" , self.incompleted_count
+		new_html_page = new_html_page + "Remaining Work Units: "+ str(self.incompleted_count)+ "<br>"
+		f = open('found_repfibdigits.txt', "r")
 		print "KEITH NUMBERS:"
 		while True:
 			line=f.readline()
 			if not line: break
 			print line  
 		f.close() 
+
+		client_count = self.count_clients()
+		print "clientID:             # of Work Units completed: "
+		new_html_page = new_html_page + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clientID:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Units completed: " + "<br>"
+		print "-------------------------------------------------"
+		new_html_page = new_html_page + webbreak
+		for x in client_count:
+			print x[0] , " .......  " , x[1]
+			new_html_page = new_html_page + x[0] + " .......  " + str(x[1]) + "<br>"
+		print "-------------------------------------------------"
+		new_html_page = new_html_page + webbreak
+		print "                          Total Active Clients: ", len(client_count)
+		new_html_page = new_html_page + "                          Total Active Clients:" + str(len(client_count)) + "<br>"
+
+
 		print; print "TRAFFIC:"
 		print pgbreak
+		new_html_page = new_html_page +  web_page_end
+		f_handle = open('index.html', 'w')
+		f_handle.write(str(new_html_page))
+		f_handle.close()
 		
-		
+
 	#work unit [lower_num, upper_num, uuid, issued, completed]
 	def create_work_units(self, starting_num, block_size, num_of_blocks):
 		print starting_num, block_size, num_of_blocks
 		print "Creating New Work Unit Group"
 		chunks = (block_size/num_of_blocks)
 		#print "chunks:", chunks
-		work_units =[]
+		self.work_units =[]
 		high = (starting_num + block_size)
 		print starting_num, high, chunks
 		for i in self.my_xrange(starting_num, high , chunks):
 			the_range = [i, (i + chunks) ]
-			print the_range, the_range[0], the_range[1]
+			#print the_range, the_range[0], the_range[1]
 			#print "range:", the_range 
-			work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False, None])
-		pickle.dump(work_units, open( "test_work_units.p", "wb" ) )
-		print work_units
+			self.work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False, None])
+		pickle.dump(self.work_units, open( "work_units.p", "wb" ) )
+		#print "new work block created", self.work_units
+		#raw_input()
 		#sys.exit(-1)
-		return
+		#return
 
 #this function is to get around the 32bit native int barrier
 #not needed in 64 native systems
@@ -220,8 +246,6 @@ def my_xrange(start, stop, step):
 	while i < stop:
 		yield i
 		i += step
-
-
 
 #work unit [lower_num, upper_num, uuid, issued, completed]
 def create_work_units(starting_num, block_size, num_of_blocks):
@@ -235,10 +259,10 @@ def create_work_units(starting_num, block_size, num_of_blocks):
 		print the_range, the_range[0], the_range[1]
 		#print "range:", the_range 
 		work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False, None])
-	pickle.dump(work_units, open( "test_work_units.p", "wb" ) )
+	pickle.dump(work_units, open( "work_units.p", "wb" ) )
 	print work_units
 	#sys.exit(-1)
-	return
+	#return
 
 
 def main():
@@ -250,11 +274,9 @@ def main():
 # this only runs if the module was *not* imported
 if __name__ == '__main__':
 
-	f = open('test_last_repfibdigit.txt', "r")
+	f = open('last_repfibdigit.txt', "r")
 	last_num = int(f.read())
 	f.close()
-	if last_num == 1:
-		create_work_units(starting_num=1, block_size=global_block_size, num_of_blocks=global_num_of_blocks)
 	if last_num > 1:
 		create_work_units(starting_num=last_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)
 	
