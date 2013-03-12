@@ -128,21 +128,30 @@ class Echo(protocol.Protocol):
 			pickle.dump(self.work_units, open( "work_units.p", "wb" ) )
 			#return self.work_units[index]
 
+	def dupli(self, the_list):
+    		count = the_list.count # this optimization added courtesy of Sven's comment
+    		result = [(item, count(item)) for item in set(the_list)]
+    		result.sort()
+    		return result
+
+
 	def count_clients(self):
 		#work_units = pickle.load( open( "work_units.p", "rb" ) )
 		clients = []
 		num_of_clients = 0
 		for index,next_unit in enumerate(self.work_units):
 			if next_unit[5] != None: clients.append(next_unit[5])
-		clients_dict = dict((g[0],len(list(g[1]))) for g in groupby(clients))
+		#clients_dict = dict((g[0],len(list(g[1]))) for g in groupby(clients))
+		#clients_dict = dict((g[0],len(list(g[1]))) for g in clients)
 		#for x in len(clients_dict):
-			
+		clients_sorted = self.dupli(clients)
 		print "     clientID:  ",  "      # of Work Units completed: "
 		print "-------------------------------------------------"
-		for x in clients_dict.keys():
-			print x, " .......  ", clients_dict[x]
+		for x in clients_sorted:
+			print x[0] , " .......  " , x[1]
 		print "-------------------------------------------------"
-		print "                          Total Active Clients:", len(clients_dict)
+		print "                          Total Active Clients:", len(clients_sorted)
+
 		#time.sleep(10)		
 
 	def monitor_work_units(self):
@@ -187,6 +196,7 @@ class Echo(protocol.Protocol):
 		print; print "TRAFFIC:"
 		print pgbreak
 		
+
 		
 	#work unit [lower_num, upper_num, uuid, issued, completed]
 	def create_work_units(self, starting_num, block_size, num_of_blocks):
