@@ -16,7 +16,7 @@ UPDATE_SERVER = "http://repfibdigit.isotope11.com:6667"
 #PORT = 5555
 
 #production server
-SERVER = 'http://repfibdigit.isotope11.com'
+SERVER = 'repfibdigit.isotope11.com'
 PORT = 6666
 
 pgbreak = "-----------------------------------------------"
