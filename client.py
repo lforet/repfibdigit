@@ -42,48 +42,32 @@ def appexe_from_executable(exepath):
 
 def initialize_client():
 	#handled auto-update stuff
-	while True:
-		try:
-			app = esky.Esky(sys.executable, UPDATE_SERVER)
-			print "You are running Client version: %s" % app.active_version
-			print "checking for client update..."
-			time.sleep(2)
-			break
-		except:
-			print "connection failed."
-			time.sleep(1)
-			pass
 	try:
+		app = esky.Esky(sys.executable, UPDATE_SERVER)
+		print "You are running Client version: %s" % app.active_version
+		print "checking for client update..."
+		time.sleep(2)
 		if app.find_update() == None:
 			print "no update available..."
 			time.sleep(2)
+		if app.find_update() != None:
+			print "Update available....", app.find_update()
+			print "SuperUser permission required to update..."
+			if app.has_root() == False:
+				 app.get_root()
+			print "auto-updating..."
+			try:
+				app.auto_update()
+			except Exception, e:
+				print "ERROR UPDATING APP:", e
+			app.reinitialize()
+			print "restarting with new client..."
+			time.sleep(3)
+			restart_this_app()
 	except:
 		print "update connection failed."
 		time.sleep(1)
 		pass
-	#print "Update available....", app.find_update(), app.active_version
-	#raw_input()
-	while True:
-		try:
-			if app.find_update() != None:
-				print "Update available....", app.find_update()
-				print "SuperUser permission required to update..."
-				if app.has_root() == False:
-					 app.get_root()
-				print "auto-updating..."
-				try:
-					app.auto_update()
-				except Exception, e:
-					print "ERROR UPDATING APP:", e
-				app.reinitialize()
-				print "restarting with new client..."
-				time.sleep(3)
-				restart_this_app()
-				break
-		except:
-			print "update connection failed."
-			time.sleep(1)
-			pass
 
 ########################################################################
 
