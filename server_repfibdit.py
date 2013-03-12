@@ -10,7 +10,7 @@ import sys
 import os
 from itertools import groupby
 
-global_block_size=1000000
+global_block_size=2000000
 global_num_of_blocks=100
 SERVER = 'isotope11.selfip.com'
 PORT = 6666
@@ -175,10 +175,10 @@ class Echo(protocol.Protocol):
 		'''
 		new_html_page = '''
 		<HTML>
-		<meta http-equiv="refresh" content="1" > 
+		<meta http-equiv="refresh" content="3" > 
 		'''
 		pgbreak = "-----------------------------------------------"
-		webbreak = 	"-------------------------------------------------------------------------------<br>"
+		webbreak = 	"---------------------------------------------------------------------------------------<br>"
 		print pgbreak
 		new_html_page = new_html_page + webbreak
 		print "Last Block: ", self.last_number_checked
@@ -188,27 +188,29 @@ class Echo(protocol.Protocol):
 		print "Units per Block: ", self.num_of_blocks
 		new_html_page = new_html_page + "Units per Block:  " + str(self.num_of_blocks) + "<br>"
 		print "Remaining Work Units:" , self.incompleted_count
-		new_html_page = new_html_page + "Remaining Work Units: "+ str(self.incompleted_count)+ "<br>"
+		new_html_page = new_html_page + "Remaining Work Units: "+ str(self.num_of_blocks) + "/" + str(self.incompleted_count)+ "<br>"
 		f = open('found_repfibdigits.txt', "r")
 		print "KEITH NUMBERS:"
+		new_html_page = new_html_page + "KEITH NUMBERS FOUND:" + "<br>"
 		while True:
 			line=f.readline()
 			if not line: break
 			print line  
+			new_html_page = new_html_page + line +  "<br>"
 		f.close() 
-
+		
 		client_count = self.count_clients()
 		print "clientID:             # of Work Units completed: "
-		new_html_page = new_html_page + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clientID:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Units completed: " + "<br>"
+		new_html_page = new_html_page + "<br>" + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clientID:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Units completed: " + "<br>"
 		print "-------------------------------------------------"
 		new_html_page = new_html_page + webbreak
 		for x in client_count:
 			print x[0] , " .......  " , x[1]
-			new_html_page = new_html_page + x[0] + " .......  " + str(x[1]) + "<br>"
+			new_html_page = new_html_page + x[0] + " ..........  " + str(x[1]) + "<br>"
 		print "-------------------------------------------------"
 		new_html_page = new_html_page + webbreak
 		print "                          Total Active Clients: ", len(client_count)
-		new_html_page = new_html_page + "                          Total Active Clients:" + str(len(client_count)) + "<br>"
+		new_html_page = new_html_page + "Total Active Clients: " + str(len(client_count)) + "<br>"
 
 
 		print; print "TRAFFIC:"
