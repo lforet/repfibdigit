@@ -29,6 +29,8 @@ class Echo(protocol.Protocol):
 	def dataReceived(self, data):
 		print "CLIENT >>", data
 		self.work_units = pickle.load( open( "work_units.p", "rb" ) )
+                #print 'data received..press enter to load work units', self.work_units
+                #raw_input()
 		self.monitor_work_units()
 		self.update_display()
 		if len(data) > 1:
@@ -96,7 +98,7 @@ class Echo(protocol.Protocol):
 				for index,next_unit in enumerate(self.work_units):
 					if next_unit[4] == True: completed_count = completed_count + 1
 					if next_unit[3] == True: issued_count = issued_count + 1
-				print "completed_count:", completed_count, "  issued_count:", issued_count 
+				#print "completed_count:", completed_count, "  issued_count:", issued_count 
 				#IF DONT MATCH REISSUE non-completed work units
 				if issued_count != completed_count:
 					for index,next_unit in enumerate(self.work_units):
@@ -153,13 +155,16 @@ class Echo(protocol.Protocol):
 			for index,next_unit in enumerate(self.work_units):
 				if next_unit[4] == False: incompleted_count = incompleted_count + 1
 				if next_unit[3] == False: not_issued_count = not_issued_count + 1
-			print "Incompleted Work Units:" , incompleted_count
+			#print "Incompleted Work Units:" , incompleted_count
 			self.incompleted_count = incompleted_count
 			if incompleted_count == 1: print self.work_units
 			#if no incompleted units create new work block
 			if incompleted_count == 0 and not_issued_count == 0: 
 				largest_num = self.work_units[len(self.work_units)-1][1]
-				print 'largest_num:', largest_num
+				#print 'largest_num:', largest_num
+				#print 'press enter to create new work block'
+				#time.sleep(1)
+				#raw_input()
 				self.save_last_number_process(largest_num)
 				self.create_work_units(starting_num=largest_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)  
 
@@ -189,16 +194,17 @@ class Echo(protocol.Protocol):
 		print "Creating New Work Unit Group"
 		chunks = (block_size/num_of_blocks)
 		#print "chunks:", chunks
-		work_units =[]
+		self.work_units =[]
 		high = (starting_num + block_size)
 		print starting_num, high, chunks
 		for i in self.my_xrange(starting_num, high , chunks):
 			the_range = [i, (i + chunks) ]
-			print the_range, the_range[0], the_range[1]
+			#print the_range, the_range[0], the_range[1]
 			#print "range:", the_range 
-			work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False, None])
-		pickle.dump(work_units, open( "work_units.p", "wb" ) )
-		print work_units
+			self.work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False, None])
+		pickle.dump(self.work_units, open( "work_units.p", "wb" ) )
+		#print "new work block created", self.work_units
+		#raw_input()
 		#sys.exit(-1)
 		#return
 
