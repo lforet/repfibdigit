@@ -27,7 +27,8 @@ class Echo(protocol.Protocol):
 		self.SERVER = SERVER
 		self.PORT = PORT
 		self.work_units = None
-		self.block_completion_time = time.clock()
+		self.block_start_time = time.clock()
+		self.block_time = 0
 
 	def dataReceived(self, data):
 		print "CLIENT >>", data
@@ -173,6 +174,7 @@ class Echo(protocol.Protocol):
 
 	def update_display(self):
 		os.system("clear")
+		self.block_time  = abs(self.block_start_time - time.clock())
 		web_page_end ='''
 		</HTML>
 		'''
@@ -192,8 +194,8 @@ class Echo(protocol.Protocol):
 		new_html_page = new_html_page + "Units per Block:  " + str(self.num_of_blocks) + "<br>"
 		print "Remaining Work Units:" , self.incompleted_count
 		new_html_page = new_html_page + "Remaining Work Units: "+ str(self.num_of_blocks) + "/" + str(self.incompleted_count)+ "<br>"
-		print "Time worked on current Block:", abs(self.block_completion_time - time.clock())
-		new_html_page = new_html_page + "Time worked on current Block:" +  str(abs(self.block_completion_time - time.clock()))
+		print "Time worked on current Block:", self.block_time
+		new_html_page = new_html_page + "Time worked on current Block:" +  str(self.block_time) + "<br>"
 		f = open('found_repfibdigits.txt', "r")
 		print "KEITH NUMBERS:"
 		new_html_page = new_html_page + "KEITH NUMBERS FOUND:" + "<br>"
@@ -241,7 +243,7 @@ class Echo(protocol.Protocol):
 			#print "range:", the_range 
 			self.work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False, None])
 		pickle.dump(self.work_units, open( "work_units.p", "wb" ) )
-		self.block_completion_time = time.clock()
+		self.block_start_time = time.clock()
 		#print "new work block created", self.work_units
 		#raw_input()
 		#sys.exit(-1)
