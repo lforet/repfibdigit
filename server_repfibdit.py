@@ -15,7 +15,7 @@ global_num_of_blocks=100
 SERVER = 'http://repfibdigit.isotope11.com'
 PORT = 6666
 last =  7000000000000000000000026042750000
-global_block_start_time = time.clock()
+global_block_start_time = time.time()
 
 #		print "Work Unit completion time:", abs(nowtime - time.clock()) 
 
@@ -175,13 +175,13 @@ class Echo(protocol.Protocol):
 	def update_display(self):
 		global global_block_start_time
 		os.system("clear")
-		self.block_time  = abs(global_block_start_time - time.clock())
+		self.block_time  = abs(global_block_start_time - time.time())
 		web_page_end ='''
 		</HTML>
 		'''
 		new_html_page = '''
 		<HTML>
-		<meta http-equiv="refresh" content="5" > 
+		<meta http-equiv="refresh" content="4" > 
 		'''
 		pgbreak = "-----------------------------------------------"
 		webbreak = 	"---------------------------------------------------------------------------------------<br>"
@@ -245,7 +245,7 @@ class Echo(protocol.Protocol):
 			#print "range:", the_range 
 			self.work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False, None])
 		pickle.dump(self.work_units, open( "work_units.p", "wb" ) )
-		global_block_start_time = time.clock()
+		global_block_start_time = time.time()
 		#print "new work block created", self.work_units
 		#raw_input()
 		#sys.exit(-1)
