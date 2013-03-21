@@ -14,7 +14,7 @@ global_block_size=2000000
 global_num_of_blocks=100
 SERVER = 'http://repfibdigit.isotope11.com'
 PORT = 6666
-last =  7000000000000000000000005680000000
+last =  7000000000000000000000026042750000
 
 class Echo(protocol.Protocol):
 	def __init__(self):
