@@ -173,6 +173,7 @@ class Echo(protocol.Protocol):
 				self.create_work_units(starting_num=largest_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)  
 
 	def update_display(self):
+		global global_block_start_time
 		os.system("clear")
 		self.block_time  = abs(global_block_start_time - time.clock())
 		web_page_end ='''
@@ -180,7 +181,7 @@ class Echo(protocol.Protocol):
 		'''
 		new_html_page = '''
 		<HTML>
-		<meta http-equiv="refresh" content="3" > 
+		<meta http-equiv="refresh" content="5" > 
 		'''
 		pgbreak = "-----------------------------------------------"
 		webbreak = 	"---------------------------------------------------------------------------------------<br>"
@@ -230,6 +231,7 @@ class Echo(protocol.Protocol):
 
 	#work unit [lower_num, upper_num, uuid, issued, completed]
 	def create_work_units(self, starting_num, block_size, num_of_blocks):
+		global global_block_start_time
 		print starting_num, block_size, num_of_blocks
 		print "Creating New Work Unit Group"
 		chunks = (block_size/num_of_blocks)
@@ -249,32 +251,6 @@ class Echo(protocol.Protocol):
 		#sys.exit(-1)
 		#return
 
-#this function is to get around the 32bit native int barrier
-#not needed in 64 native systems
-def my_xrange(start, stop, step):
-	i = start
-	while i < stop:
-		yield i
-		i += step
-
-#work unit [lower_num, upper_num, uuid, issued, completed]
-def create_work_units(starting_num, block_size, num_of_blocks):
-	print starting_num, block_size, num_of_blocks
-	print "Creating New Work Unit Group"
-	chunks = (block_size/num_of_blocks)
-	#print "chunks:", chunks
-	work_units =[]
-	for i in my_xrange(starting_num, (starting_num + block_size), chunks):
-		the_range = [i, (i + chunks) ]
-		print the_range, the_range[0], the_range[1]
-		#print "range:", the_range 
-		work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False, None])
-	pickle.dump(work_units, open( "work_units.p", "wb" ) )
-	print work_units
-	#sys.exit(-1)
-	#return
-
-
 def main():
     factory = protocol.ServerFactory()
     factory.protocol = Echo
@@ -289,7 +265,6 @@ if __name__ == '__main__':
 	#f.close()
 	#if last_num > 1:
 	#	create_work_units(starting_num=last_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)
-	
 	main()
 
  
