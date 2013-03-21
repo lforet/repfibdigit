@@ -10,7 +10,7 @@ import sys
 import os
 from itertools import groupby
 
-global_block_size=5000000
+global_block_size=4000000
 global_num_of_blocks=100
 SERVER = 'http://repfibdigit.isotope11.com'
 PORT = 6666
