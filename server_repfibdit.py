@@ -15,6 +15,7 @@ global_num_of_blocks=100
 SERVER = 'http://repfibdigit.isotope11.com'
 PORT = 6666
 last =  7000000000000000000000026042750000
+global_block_start_time = time.clock()
 
 #		print "Work Unit completion time:", abs(nowtime - time.clock()) 
 
@@ -27,7 +28,6 @@ class Echo(protocol.Protocol):
 		self.SERVER = SERVER
 		self.PORT = PORT
 		self.work_units = None
-		self.block_start_time = time.clock()
 		self.block_time = 0
 
 	def dataReceived(self, data):
@@ -174,7 +174,7 @@ class Echo(protocol.Protocol):
 
 	def update_display(self):
 		os.system("clear")
-		self.block_time  = abs(self.block_start_time - time.clock())
+		self.block_time  = abs(global_block_start_time - time.clock())
 		web_page_end ='''
 		</HTML>
 		'''
@@ -243,7 +243,7 @@ class Echo(protocol.Protocol):
 			#print "range:", the_range 
 			self.work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False, None])
 		pickle.dump(self.work_units, open( "work_units.p", "wb" ) )
-		self.block_start_time = time.clock()
+		global_block_start_time = time.clock()
 		#print "new work block created", self.work_units
 		#raw_input()
 		#sys.exit(-1)
@@ -284,11 +284,11 @@ def main():
 # this only runs if the module was *not* imported
 if __name__ == '__main__':
 
-	f = open('last_repfibdigit.txt', "r")
-	last_num = int(f.read())
-	f.close()
-	if last_num > 1:
-		create_work_units(starting_num=last_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)
+	#f = open('last_repfibdigit.txt', "r")
+	#last_num = int(f.read())
+	#f.close()
+	#if last_num > 1:
+	#	create_work_units(starting_num=last_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)
 	
 	main()
 
