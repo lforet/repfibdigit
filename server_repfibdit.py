@@ -14,7 +14,8 @@ global_block_size=4000000
 global_num_of_blocks=100
 SERVER = 'http://repfibdigit.isotope11.com'
 PORT = 6666
-last =  7000000000000000000000026042750000
+#last =  7000000000000000000000026042750000
+last=0
 global_block_start_time = time.time()
 
 #		print "Work Unit completion time:", abs(nowtime - time.clock()) 
@@ -54,6 +55,7 @@ class Echo(protocol.Protocol):
 				f.write('\n')
 				f.close()
 				self.transport.write('keith num record')
+				self.update_display()	
 
 		if data == "n":
 			#print self.issue_work_unit()
@@ -62,13 +64,7 @@ class Echo(protocol.Protocol):
 			pickled_string = pickle.dumps(work_unit_to_send)
 			self.transport.write(pickled_string)
 	
-	#this function is to get around the 32bit native int barrier
-	#not needed in 64 native systems
-	def my_xrange(self,start, stop, step):
-		i = start
-		while i < stop:
-			yield i
-			i += step
+
 
 	def save_last_number_process(self, num):
 		f = open('last_repfibdigit.txt', "w")
@@ -82,7 +78,7 @@ class Echo(protocol.Protocol):
 		return data
 
 	def issue_work_unit(self):
-			#work_units = pickle.load( open( "work_units.p", "rb" ) )
+			self.work_units = pickle.load( open( "work_units.p", "rb" ) )
 			work_unit_index_to_return = 0
 			# find_next_work_unit
 			for index1,next_unit in enumerate(self.work_units):
@@ -150,9 +146,9 @@ class Echo(protocol.Protocol):
 	
 
 	def monitor_work_units(self):
-			#work_units = pickle.load( open( "work_units.p", "rb" ) )
+			#self.work_units = pickle.load( open( "work_units.p", "rb" ) )
 			self.last_number_checked = int(self.get_last_number_process())
-
+ 			print "self.last_number_checked:", self.last_number_checked 
 			#count incompleted units
 			incompleted_count = 0
 			not_issued_count = 0
@@ -164,13 +160,15 @@ class Echo(protocol.Protocol):
 			if incompleted_count == 1: print self.work_units
 			#if no incompleted units create new work block
 			if incompleted_count == 0 and not_issued_count == 0: 
+				#print "loading work units"
+				self.work_units = pickle.load( open( "work_units.p", "rb" ) )
 				largest_num = self.work_units[len(self.work_units)-1][1]
 				#print 'largest_num:', largest_num
 				#print 'press enter to create new work block'
 				#time.sleep(1)
 				#raw_input()
 				self.save_last_number_process(largest_num)
-				self.create_work_units(starting_num=largest_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)  
+				create_work_units(starting_num=largest_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)  
 
 	def update_display(self):
 		global global_block_start_time
@@ -229,27 +227,38 @@ class Echo(protocol.Protocol):
 		f_handle.close()
 		
 
-	#work unit [lower_num, upper_num, uuid, issued, completed]
-	def create_work_units(self, starting_num, block_size, num_of_blocks):
-		global global_block_start_time
-		print starting_num, block_size, num_of_blocks
-		print "Creating New Work Unit Group"
-		chunks = (block_size/num_of_blocks)
-		#print "chunks:", chunks
-		self.work_units =[]
-		high = (starting_num + block_size)
-		print starting_num, high, chunks
-		for i in self.my_xrange(starting_num, high , chunks):
-			the_range = [i, (i + chunks) ]
-			#print the_range, the_range[0], the_range[1]
-			#print "range:", the_range 
-			self.work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False, None])
-		pickle.dump(self.work_units, open( "work_units.p", "wb" ) )
-		global_block_start_time = time.time()
-		#print "new work block created", self.work_units
-		#raw_input()
-		#sys.exit(-1)
-		#return
+#work unit [lower_num, upper_num, uuid, issued, completed]
+#def create_work_units(self, starting_num, block_size, num_of_blocks):
+def create_work_units( starting_num, block_size, num_of_blocks):
+	global global_block_start_time
+	print starting_num, block_size, num_of_blocks
+	print "Creating New Work Unit Group"
+	chunks = (block_size/num_of_blocks)
+	#print "chunks:", chunks
+	work_units =[]
+	high = (starting_num + block_size)
+	print starting_num, high, chunks
+	for i in my_xrange(starting_num, high , chunks):
+		the_range = [i, (i + chunks) ]
+		#print the_range, the_range[0], the_range[1]
+		#print "range:", the_range 
+		work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False, None])
+	pickle.dump(work_units, open( "work_units.p", "wb" ) )
+	global_block_start_time = time.time()
+	#print "new work block created", work_units
+	#raw_input()
+	#sys.exit(-1)
+	return
+
+#this function is to get around the 32bit native int barrier
+#not needed in 64 native systems
+def my_xrange(start, stop, step):
+	i = start
+	while i < stop:
+		yield i
+		i += step
+
+
 
 def main():
     factory = protocol.ServerFactory()
@@ -260,11 +269,26 @@ def main():
 # this only runs if the module was *not* imported
 if __name__ == '__main__':
 
+	print "loading work units"
+	work_units = pickle.load( open( "work_units.p", "rb" ) )
+	starting_number  = work_units[len(work_units)-1][1]
+
+
+	if len(sys.argv) > 2:
+		global_block_size=int(sys.argv[2])
+
+	if len(sys.argv) > 3:
+		global_num_of_blocks=int(sys.argv[3])
+
+	if len(sys.argv) > 1:
+		starting_number = int(sys.argv[1])
+		create_work_units(starting_num = starting_number , block_size=global_block_size, num_of_blocks=global_num_of_blocks)	
+
 	#f = open('last_repfibdigit.txt', "r")
 	#last_num = int(f.read())
 	#f.close()
 	#if last_num > 1:
-	#	create_work_units(starting_num=last_num, block_size=global_block_size, num_of_blocks=global_num_of_blocks)
+		
 	main()
 
  

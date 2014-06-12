@@ -12,7 +12,7 @@ import numpy as np
 import cProfile
 
 
-	def is_repfibdigit(self, number_to_test):
+def is_repfibdigit(self, number_to_test):
 		n=map(int,str(number_to_test))
 		number_to_test = long(number_to_test)
 
@@ -38,21 +38,22 @@ import cProfile
 		return
 	#this function is to get around the 32bit native int barrier
 	#not needed in 64 native systems
-	def my_xrange(self, start, stop, step):
-   		i = start
-   		while i < stop:
-       			yield i
-       			i += step
 
-	def test_range(self, the_range):
-		low = the_range[0]
-		high = the_range[1]
-		for x in self.my_xrange(low, high, 1):
-			self.is_repfibdigit(x)
+def my_xrange(self, start, stop, step):
+   	i = start
+   	while i < stop:
+ 		yield i
+       		i += step
+
+def test_range(self, the_range):
+	low = the_range[0]
+	high = the_range[1]
+	for x in self.my_xrange(low, high, 1):
+		self.is_repfibdigit(x)
 		#self.report_work_completed(high)
 		
 
-	def report_keith_num(self, num):
+def report_keith_num(self, num):
 		#establish coms with server
 		s = socket.socket()         # Create a socket object
 		host = socket.gethostname() # Get local machine name

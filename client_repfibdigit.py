@@ -12,11 +12,12 @@ import numpy as np
 #import cProfile
 import timeit
 import uuid
+import sys 
 
 ########################################################################
 
-SERVER = 'isotope11.selfip.com'
-#SERVER = ''
+#SERVER = 'isotope11.selfip.com'
+SERVER = 'localhost'
 PORT = 6666 
 pgbreak = "-----------------------------------------------"
 
@@ -200,6 +201,15 @@ def report_work_completed(clientID, work_unit_uuid):
 
 
 if __name__=="__main__":
+
+	SERVER = 'localhost'
+	PORT = 6666 
+
+	if len(sys.argv) > 1:
+		SERVER = sys.argv[1]
+
+	if len(sys.argv) > 2:
+		PORT= int(sys.argv[2])
 
 	# Set up some global variables
 	#multiple threads slows app down
