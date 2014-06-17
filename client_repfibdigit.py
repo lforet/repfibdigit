@@ -13,6 +13,8 @@ import numpy as np
 import timeit
 import uuid
 import sys 
+import fib
+
 
 ########################################################################
 
@@ -49,10 +51,11 @@ class repfigtest(threading.Thread):
  
     #----------------------------------------------------------------------
 	def is_repfibdigit(self, number_to_test):
-		n = map(int,str(number_to_test))
-		while number_to_test > n[0]:
-			n=n[1:]+[sum(n)]
-		if (number_to_test == n[0]) & (number_to_test>9):
+		#n = map(int,str(number_to_test))
+		#while number_to_test > n[0]:
+		#	n=n[1:]+[sum(n)]
+		#if (number_to_test == n[0]) & (number_to_test>9):
+		if fib.is_repfibdigit(number_to_test) == True:
 			print '---------------------------------------------'
 			print 'queue:',  threading.current_thread()
 			print number_to_test, " is a Keith Number!"

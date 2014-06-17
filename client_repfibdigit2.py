@@ -13,6 +13,8 @@ import numpy as np
 import timeit
 import uuid
 import sys 
+import fib
+
 
 ########################################################################
 
