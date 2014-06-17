@@ -5,6 +5,9 @@ from distutils.core import setup
 # for windows
 # > python setup.py bdist_esky
 
+#run this to compile on local machine
+#> python setup_fib.py build_ext --inplace
+
 VERSION = "1.33"
 SCRIPT = "client.py"
 
