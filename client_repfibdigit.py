@@ -126,42 +126,49 @@ class repfigtest(threading.Thread):
 
 def get_work_unit():
 	#establish coms with server
-	s = socket.socket()         # Create a socket object
+
 	#host = socket.gethostname() # Get local machine name
 	#port = 8000                # Reserve a port for your service.
-	while True:
+	new_work_unit = None
+	while new_work_unit == None:
+		s = socket.socket()         # Create a socket object
 		try:
 			print 
 			print "Getting new work unit...."
 			print 'Connecting to ', SERVER, PORT
 			s.connect((SERVER, PORT))
-			break
 		except:
 			print "connection failed."
 			time.sleep(1)
 			pass
-	while True:
 		try:
 			msg = 'n'
 			print 'CLIENT >> ', msg
 			s.send(msg)
-			break
 		except:
 			print "new work request failed...."
 			time.sleep(1)
 			pass
-	while True:
+
 		try:
 			server_reponse = s.recv(1024)
-			break
+			#break
 		except:
 			print "waiting on repsonse from SERVER:"
 			time.sleep(.5)
 			pass
-	new_work_unit = pickle.loads(server_reponse)
-	print 'SERVER >> ', new_work_unit
+		try:
+			new_work_unit = pickle.loads(server_reponse)
+			print 'SERVER >> ', new_work_unit
+			#s.close
+		except:
+			#s.close
+			print "corrupt new work unit..."
+			#new_work_unit = None
+			time.sleep(1)
 	s.close                     # Close the socket when done
 	return new_work_unit
+
 
 def report_work_completed(clientID, work_unit_uuid):
 	#print "reporting work unit to server...."
@@ -235,6 +242,7 @@ if __name__=="__main__":
 		nowtime = time.clock()
 		# get num to work from
 		work_unit = get_work_unit()
+		print "Work_unit:", work_unit
 		start_num = int(work_unit[0])
 		#print "Starting number:", start_num
 		#if start_num > 5752090994058710841670361653731519: break
