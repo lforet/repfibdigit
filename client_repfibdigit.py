@@ -212,18 +212,31 @@ def report_work_completed(clientID, work_unit_uuid):
 
 if __name__=="__main__":
 
+	#multiple threads slows app down
+	num_fetch_threads = 1	
+
 	SERVER = 'localhost'
 	PORT = 6666 
 
+	if len(sys.argv) < 1:
+		print "restart with parameters: #_of_threads, SERVER_NAME or SERVER_IP"
+
 	if len(sys.argv) > 1:
-		SERVER = sys.argv[1]
+		try:
+			num_fetch_threads = int(sys.argv[1])
+		except:
+			print "restart with parameters: #_of_threads, SERVER_NAME or SERVER_IP"
+			sys.exit()
 
 	if len(sys.argv) > 2:
-		PORT= int(sys.argv[2])
+		try:
+			SERVER = sys.argv[2]
+		except:
+			print "restart with parameters: #_of_threads, SERVER_NAME or SERVER_IP"
+			sys.exit()
 
 	# Set up some global variables
-	#multiple threads slows app down
-	num_fetch_threads = 1
+
 	queue = Queue.Queue()
 	clientID = str(uuid.uuid1())
 
@@ -242,7 +255,7 @@ if __name__=="__main__":
 		nowtime = time.clock()
 		# get num to work from
 		work_unit = get_work_unit()
-		print "Work_unit:", work_unit
+		#print "Work_unit:", work_unit
 		start_num = int(work_unit[0])
 		#print "Starting number:", start_num
 		#if start_num > 5752090994058710841670361653731519: break
@@ -266,6 +279,6 @@ if __name__=="__main__":
 		#raw_input('next series')
 		print
 		print "completion time:", abs(nowtime - time.clock()) 
-		print pgbreak
+		print pgbreak *2
 		
 		#raw_input()
