@@ -10,11 +10,12 @@ import sys
 import os
 from itertools import groupby
 
-global_block_size=4000000
-global_num_of_blocks=100
+
+
 SERVER = 'http://repfibdigit.isotope11.com'
 PORT = 6666
-#last =  7000000000000000000000026042750000
+#last =  7000000000000000000000065000000000
+
 last=0
 global_block_start_time = time.time()
 
@@ -63,7 +64,7 @@ class Echo(protocol.Protocol):
 			print "SERVER >>", work_unit_to_send 
 			pickled_string = pickle.dumps(work_unit_to_send)
 			self.transport.write(pickled_string)
-	
+			#self.transport.write("hi")
 
 
 	def save_last_number_process(self, num):
@@ -105,7 +106,11 @@ class Echo(protocol.Protocol):
 						if next_unit[3] == True and next_unit[4] == False:
 							work_unit_index_to_return = index
 							print "found unit issued but not completed...... reissuing unit", work_unit_index_to_return
-							time.sleep(.2)
+							print "All incomplete Work Units:"
+							for index,next_unit in enumerate(self.work_units):
+								if next_unit[4] == False: print "WU#: ", index, self.work_units[index]
+							#could be issuing new work units here instead of waiting
+							#time.sleep(3)
 							#print work_units
 							#raw_input()
 							break
@@ -157,7 +162,7 @@ class Echo(protocol.Protocol):
 				if next_unit[3] == False: not_issued_count = not_issued_count + 1
 			#print "Incompleted Work Units:" , incompleted_count
 			self.incompleted_count = incompleted_count
-			if incompleted_count == 1: print self.work_units
+			#if incompleted_count == 1: print self.work_units
 			#if no incompleted units create new work block
 			if incompleted_count == 0 and not_issued_count == 0: 
 				#print "loading work units"
@@ -191,10 +196,25 @@ class Echo(protocol.Protocol):
 		new_html_page = new_html_page + "Block Size:  " + str(self.block_size) + "<br>"
 		print "Units per Block: ", self.num_of_blocks
 		new_html_page = new_html_page + "Units per Block:  " + str(self.num_of_blocks) + "<br>"
+		print "Numbers per Work Unit: " , global_numbers_per_wu 
+		new_html_page = new_html_page + "Numbers per Work Unit:" + str(global_numbers_per_wu ) + "<br>"
 		print "Remaining Work Units:" , self.incompleted_count
 		new_html_page = new_html_page + "Remaining Work Units: "+ str(self.num_of_blocks) + "/" + str(self.incompleted_count)+ "<br>"
 		print "Time worked on current Block:", self.block_time
 		new_html_page = new_html_page + "Time worked on current Block:" +  str(self.block_time) + "<br>"
+
+		completed_numbers = (self.num_of_blocks - self.incompleted_count) * global_numbers_per_wu 
+		print "Completed numbers:", completed_numbers
+		print "Incomplete numbers:", self.block_size - completed_numbers
+		new_html_page = new_html_page + "Completed numbers:" +  str(completed_numbers) + "<br>"
+		numbers_per_second = int (((completed_numbers / self.block_time) * 10000) ) / 10000
+		print "Numbers per second:", numbers_per_second 
+		new_html_page = new_html_page + "Numbers per second:" +  str(numbers_per_second ) + "<br>"
+		print pgbreak
+		try:
+			print "Second Remaining:",  int ( (self.block_size - completed_numbers) / numbers_per_second)
+		except:
+			pass
 		f = open('found_repfibdigits.txt', "r")
 		print "KEITH NUMBERS:"
 		new_html_page = new_html_page + "KEITH NUMBERS FOUND:" + "<br>"
@@ -206,13 +226,13 @@ class Echo(protocol.Protocol):
 		f.close() 
 		
 		client_count = self.count_clients()
-		print "clientID:             # of Work Units completed: "
-		new_html_page = new_html_page + "<br>" + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clientID:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Units completed: " + "<br>"
-		print "-------------------------------------------------"
-		new_html_page = new_html_page + webbreak
-		for x in client_count:
-			print x[0] , " .......  " , x[1]
-			new_html_page = new_html_page + x[0] + " .......  " + str(x[1]) + "<br>"
+		#print "clientID:             # of Work Units completed: "
+		#new_html_page = new_html_page + "<br>" + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clientID:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Units completed: " + "<br>"
+		#print "-------------------------------------------------"
+		#new_html_page = new_html_page + webbreak
+		#for x in client_count:
+		#	print x[0] , " .......  " , x[1]
+		#	new_html_page = new_html_page + x[0] + " .......  " + str(x[1]) + "<br>"
 		print "-------------------------------------------------"
 		new_html_page = new_html_page + webbreak
 		print "                          Total Active Clients: ", len(client_count)
@@ -245,7 +265,7 @@ def create_work_units( starting_num, block_size, num_of_blocks):
 		work_units.append([the_range[0], the_range[1], str(uuid.uuid1()), False, False, None])
 	pickle.dump(work_units, open( "work_units.p", "wb" ) )
 	global_block_start_time = time.time()
-	#print "new work block created", work_units
+	print "new work block created", work_units
 	#raw_input()
 	#sys.exit(-1)
 	return
@@ -269,24 +289,33 @@ def main():
 # this only runs if the module was *not* imported
 if __name__ == '__main__':
 
-	print "loading work units"
-	work_units = pickle.load( open( "work_units.p", "rb" ) )
-	starting_number  = work_units[len(work_units)-1][1]
-
-
-	if len(sys.argv) > 2:
-		global_block_size=int(sys.argv[2])
-
-	if len(sys.argv) > 3:
-		global_num_of_blocks=int(sys.argv[3])
+	global_block_size=100000000
+	global_num_of_blocks=500
+	
 
 	if len(sys.argv) > 1:
-		starting_number = int(sys.argv[1])
+		global_block_size=int(sys.argv[1])
+
+	if len(sys.argv) > 2:
+		global_num_of_blocks=int(sys.argv[2])
+
+	global_numbers_per_wu = (global_block_size / global_num_of_blocks)
+
+	try:
+		print "loading work units"
+		work_units = pickle.load( open( "work_units.p", "rb" ) )
+	except:
+		f = open('last_repfibdigit.txt', "r")
+		starting_number = int(f.read())
+		f.close()
 		create_work_units(starting_num = starting_number , block_size=global_block_size, num_of_blocks=global_num_of_blocks)	
 
-	#f = open('last_repfibdigit.txt', "r")
-	#last_num = int(f.read())
-	#f.close()
+
+	#if len(sys.argv) > 1:
+	#	starting_number = int(sys.argv[1])
+	#	create_work_units(starting_num = starting_number , block_size=global_block_size, num_of_blocks=global_num_of_blocks)	
+
+	
 	#if last_num > 1:
 		
 	main()
