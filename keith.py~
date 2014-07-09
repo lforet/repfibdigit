@@ -218,5 +218,5 @@ if __name__ == '__main__':
         print '     ', sys.argv[0], '--test'
         print ('  in order to execute test code that tries to find known'
                ' Keith numbers with less than 8 digits.')
-    print find_keith(1000000, end_value=None, block_size=None, grid_size=None, verbose=True, iteration_limit=None)
+    print find_keith(10000, end_value=None, block_size=None, grid_size=None, verbose=True, iteration_limit=None)
 

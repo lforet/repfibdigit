@@ -43,7 +43,7 @@ double_sum_minus_value(Int128 sum, Int128 value)
 
 _main_v1_body = """
 __global__ void
-is_keith(unsigned long long int *target_offset_highlow)
+is_keith(unsigned long long int *target_offset_highlow, unsigned int *results)
 {
   int i = 0;
   
@@ -98,15 +98,18 @@ is_keith(unsigned long long int *target_offset_highlow)
     
   if (number_to_test.high == sum.high && number_to_test.low == sum.low)
   {
-    printf("!!! Found number: %llu * 2**64 + %llu\\n", number_to_test.high, number_to_test.low);
+    results[idx] = 1;
+    //printf("!!! Found number: %llu * 2**64 + %llu\\n", number_to_test.high, number_to_test.low);
   }
+  else
+    results[idx] = 0;
 }
 """
 
 
 _main_v2_body = """
 __global__ void
-is_keith(unsigned long long int *target_offsets_highlow)
+is_keith(unsigned long long int *target_offsets_highlow, unsigned int *results)
 {
   int i = 0;
   
@@ -121,21 +124,33 @@ is_keith(unsigned long long int *target_offsets_highlow)
 _main_v2_body += _main_v1_body[_main_v1_body.index('  /* Used for splitting'):]
 
 
-source_code_with_printf = _printf_header + _helper_function + _main_v1_body
-source_code_noprint = (source_code_with_printf[20: source_code_with_printf.index('printf')]
-                       + ";\n  }\n}\n") 
-source_code_nounroll = source_code_with_printf.replace('#pragma unroll', '')
-source_code_nounroll_strict = source_code_with_printf.replace('#pragma unroll',
-                                                              '#pragma unroll 1')
+#source_code_with_printf = _printf_header + _helper_function + _main_v1_body
+#source_code_noprint = (source_code_with_printf[20: source_code_with_printf.index('printf')]
+#                       + ";\n  }\n}\n")
 
-source_code_with_printf_v2 = _printf_header + _helper_function + _main_v2_body
+source_code = _printf_header + _helper_function + _main_v1_body 
+source_code_nounroll = source_code.replace('#pragma unroll', '')
+source_code_nounroll_strict = source_code.replace('#pragma unroll',
+                                                  '#pragma unroll 1')
 
+source_code_v2 = _helper_function + _main_v2_body
+
+
+#_return_bitarray_func_def = ("__global__ void\n"
+#                             "is_keith(unsigned long long int *target_offset_highlow,\n"
+#                             "         unsigned int *results)\n")
+#_return_bitarray_result_marking = 
+#source_code_return_bitarray = (_helper_function + 
+#                               _return_bitarray_func_def +
+#                               _main_v1_body[_main_v1_body.index('{'):
+#                                             _main_v1_body.rindex('printf')] +
+#                               _return_bitarray_result_marking)
 
 
 def print_all():
     print 'Below are the available CUDA kernel source code versions:'
-    for code_name in ['source_code_with_printf', 'source_code_noprint', 
-                      'source_code_nounroll', 'source_code_unroll0']:
+    for code_name in ['source_code', 'source_code_v2', 
+                      'source_code_nounroll', 'source_code_nounroll_strict']:
         print '-' * 30, '\n', code_name, '\n', '-' * 30
         print eval(code_name)
         print '-' * 30, '\nENDOF:', code_name, '\n', '-' * 30
@@ -144,6 +159,6 @@ def print_all():
 
 if __name__ == '__main__':
     pass
-    #print source_code_with_printf_v2
+    print source_code
     #print_all()
 

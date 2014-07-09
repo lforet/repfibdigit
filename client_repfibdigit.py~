@@ -14,7 +14,7 @@ import timeit
 import uuid
 import sys 
 import fib
-
+import keith
 
 ########################################################################
 
@@ -255,7 +255,7 @@ if __name__=="__main__":
 		nowtime = time.clock()
 		# get num to work from
 		work_unit = get_work_unit()
-		print "Work_unit:", work_unit
+		#print "Work_unit:", work_unit
 		start_num = int(work_unit[0])
 		#print "Starting number:", start_num
 		#if start_num > 5752090994058710841670361653731519: break
