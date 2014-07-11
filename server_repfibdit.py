@@ -14,7 +14,7 @@ from itertools import groupby
 
 SERVER = 'http://repfibdigit.isotope11.com'
 PORT = 6666
-#last =  7000000000000000000000065000000000
+base_starting_number =  5752090994058710841670361653731519
 
 last=0
 global_block_start_time = time.time()
@@ -190,7 +190,12 @@ class Echo(protocol.Protocol):
 		webbreak = 	"---------------------------------------------------------------------------------------<br>"
 		print pgbreak
 		new_html_page = new_html_page + webbreak
-		print "Last Block: ", self.last_number_checked
+		print "Total Numbers Checked:",  (self.last_number_checked - base_starting_number)
+		print numToWords((self.last_number_checked - base_starting_number))
+		print
+		new_html_page = new_html_page + "Total Numbers Checked:" + str((self.last_number_checked - base_starting_number))+ "<br>"
+		new_html_page = new_html_page + numToWords((self.last_number_checked - base_starting_number)) + "<br>"
+		print "Last Block: ", self.last_number_checked	
 		new_html_page = new_html_page + "Last Block: " + str(self.last_number_checked)+ "<br>"
 		print "Block Size: ", self.block_size
 		new_html_page = new_html_page + "Block Size:  " + str(self.block_size) + "<br>"
@@ -208,11 +213,14 @@ class Echo(protocol.Protocol):
 		print "Incomplete numbers:", self.block_size - completed_numbers
 		new_html_page = new_html_page + "Completed numbers:" +  str(completed_numbers) + "<br>"
 		numbers_per_second = int (((completed_numbers / self.block_time) * 10000) ) / 10000
-		print "Numbers per second:", numbers_per_second 
+		print "Numbers per second:", numbers_per_second
+		print numToWords(numbers_per_second)
 		new_html_page = new_html_page + "Numbers per second:" +  str(numbers_per_second ) + "<br>"
+		new_html_page = new_html_page + numToWords(numbers_per_second) + "<br>"
 		print pgbreak
 		try:
-			print "Second Remaining:",  int ( (self.block_size - completed_numbers) / numbers_per_second)
+			print "Time Remaining:",  display_time(int ( (self.block_size - completed_numbers) / numbers_per_second))
+			new_html_page = new_html_page + "Time Remaining:" + str(display_time(int ( (self.block_size - completed_numbers) / numbers_per_second))) + "<br>"
 		except:
 			pass
 		f = open('found_repfibdigits.txt', "r")
@@ -278,7 +286,67 @@ def my_xrange(start, stop, step):
 		yield i
 		i += step
 
+intervals = (
+    ('week', 604800),
+    ('day', 86400),
+    ('hours', 3600),
+    ('minutes', 60),
+    ('seconds', 1),
+    )
 
+def display_time(seconds, granularity=2):
+    result = []
+
+    for name, count in intervals:
+        value = seconds // count
+        if value:
+            seconds -= value * count
+            if value == 1:
+                name = name.rstrip('s')
+            result.append("{} {}".format(value, name))
+    return ', '.join(result[:granularity])
+
+
+
+
+
+def numToWords(num,join=True):
+    '''words = {} convert an integer number into words'''
+    units = ['','one','two','three','four','five','six','seven','eight','nine']
+    teens = ['','eleven','twelve','thirteen','fourteen','fifteen','sixteen', \
+             'seventeen','eighteen','nineteen']
+    tens = ['','ten','twenty','thirty','forty','fifty','sixty','seventy', \
+            'eighty','ninety']
+    thousands = ['','thousand','million','billion','trillion','quadrillion', \
+                 'quintillion','sextillion','septillion','octillion', \
+                 'nonillion','decillion','undecillion','duodecillion', \
+                 'tredecillion','quattuordecillion','sexdecillion', \
+                 'septendecillion','octodecillion','novemdecillion', \
+                 'vigintillion']
+    words = []
+    if num==0: words.append('zero')
+    else:
+        numStr = '%d'%num
+        numStrLen = len(numStr)
+        groups = (numStrLen+2)/3
+        numStr = numStr.zfill(groups*3)
+        for i in range(0,groups*3,3):
+            h,t,u = int(numStr[i]),int(numStr[i+1]),int(numStr[i+2])
+            g = groups-(i/3+1)
+            if h>=1:
+                words.append(units[h])
+                words.append('hundred')
+            if t>1:
+                words.append(tens[t])
+                if u>=1: words.append(units[u])
+            elif t==1:
+                if u>=1: words.append(teens[u])
+                else: words.append(tens[t])
+            else:
+                if u>=1: words.append(units[u])
+            if (g>=1) and ((h+t+u)>0): words.append(thousands[g]+',')
+    if join: return ' '.join(words)
+    return words
 
 def main():
     factory = protocol.ServerFactory()
