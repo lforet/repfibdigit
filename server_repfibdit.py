@@ -184,7 +184,7 @@ class Echo(protocol.Protocol):
 		'''
 		new_html_page = '''
 		<HTML>
-		<meta http-equiv="refresh" content="4" > 
+		<meta http-equiv="refresh" content="5" > 
 		'''
 		pgbreak = "-----------------------------------------------"
 		webbreak = 	"---------------------------------------------------------------------------------------<br>"
@@ -205,8 +205,8 @@ class Echo(protocol.Protocol):
 		new_html_page = new_html_page + "Numbers per Work Unit:" + str(global_numbers_per_wu ) + "<br>"
 		print "Remaining Work Units:" , self.incompleted_count
 		new_html_page = new_html_page + "Remaining Work Units: "+ str(self.num_of_blocks) + "/" + str(self.incompleted_count)+ "<br>"
-		print "Time worked on current Block:", self.block_time
-		new_html_page = new_html_page + "Time worked on current Block:" +  str(self.block_time) + "<br>"
+		print "Time worked on current Block:", display_time(self.block_time)
+		new_html_page = new_html_page + "Time worked on current Block:" +  display_time(self.block_time) + "<br>"
 
 		completed_numbers = (self.num_of_blocks - self.incompleted_count) * global_numbers_per_wu 
 		print "Completed numbers:", completed_numbers
