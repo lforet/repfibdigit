@@ -78,6 +78,18 @@ class Echo(protocol.Protocol):
 		f.close()
 		return data
 
+	def save_total_work_time(self, num):
+		f = open('total_work_time.txt', "w")
+		f.write(str(num))
+		f.close()
+
+	def get_total_work_time(self):
+		f = open('total_work_time.txt', "r")
+		data = f.read()
+		f.close()
+		return int(data)
+
+
 	def issue_work_unit(self):
 			self.work_units = pickle.load( open( "work_units.p", "rb" ) )
 			work_unit_index_to_return = 0
@@ -179,6 +191,9 @@ class Echo(protocol.Protocol):
 		global global_block_start_time
 		os.system("clear")
 		self.block_time  = abs(global_block_start_time - time.time())
+		temp_time = get_total_work_time()
+		Total_Worktime = temp_time + self.block_time
+		save_total_work_time(str(Total_Worktime))
 		web_page_end ='''
 		</HTML>
 		'''
@@ -207,6 +222,9 @@ class Echo(protocol.Protocol):
 		new_html_page = new_html_page + "Remaining Work Units: "+ str(self.num_of_blocks) + "/" + str(self.incompleted_count)+ "<br>"
 		print "Time worked on current Block:", display_time(self.block_time)
 		new_html_page = new_html_page + "Time worked on current Block:" +  display_time(self.block_time) + "<br>"
+
+		print "Total Time worked:", display_time(Total_Worktime)
+		new_html_page = new_html_page + "Total Time worked:" +  display_time(Total_Worktime) + "<br>"
 
 		completed_numbers = (self.num_of_blocks - self.incompleted_count) * global_numbers_per_wu 
 		print "Completed numbers:", completed_numbers
