@@ -1,0 +1,9 @@
+
+
+apt-get update
+apt-get -y upgrade
+pip install pycuda
+
+
+
+
