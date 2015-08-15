@@ -14,7 +14,7 @@ from itertools import groupby
 
 SERVER = 'http://repfibdigit.isotope11.com'
 PORT = 6666
-base_starting_number =  5752090994058710841670361653731519
+base_starting_number =  5752090994058710841686243753731520
 
 last=0
 global_block_start_time = time.time()
@@ -87,7 +87,7 @@ class Echo(protocol.Protocol):
 		f = open('total_work_time.txt', "r")
 		data = f.read()
 		f.close()
-		return int(data)
+		return data
 
 
 	def issue_work_unit(self):
@@ -191,9 +191,11 @@ class Echo(protocol.Protocol):
 		global global_block_start_time
 		os.system("clear")
 		self.block_time  = abs(global_block_start_time - time.time())
-		temp_time = get_total_work_time()
+		temp_time = float(self.get_total_work_time())
 		Total_Worktime = temp_time + self.block_time
-		save_total_work_time(str(Total_Worktime))
+		self.save_total_work_time(str(Total_Worktime))
+		#print Total_Worktime
+		#raw_input()
 		web_page_end ='''
 		</HTML>
 		'''
@@ -375,9 +377,8 @@ def main():
 # this only runs if the module was *not* imported
 if __name__ == '__main__':
 
-	global_block_size=100000000
+	global_block_size=10000000000
 	global_num_of_blocks=500
-	
 
 	if len(sys.argv) > 1:
 		global_block_size=int(sys.argv[1])
@@ -390,12 +391,22 @@ if __name__ == '__main__':
 	try:
 		print "loading work units"
 		work_units = pickle.load( open( "work_units.p", "rb" ) )
+		print work_units
+		print "waiting for clients to connect.."
 	except:
 		f = open('last_repfibdigit.txt', "r")
 		starting_number = int(f.read())
 		f.close()
 		create_work_units(starting_num = starting_number , block_size=global_block_size, num_of_blocks=global_num_of_blocks)	
-
+	
+	#need to run this in background
+	#import SimpleHTTPServer
+	#import SocketServer
+	#WEB_PORT = 8000
+	#Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+	#httpd = SocketServer.TCPServer(("", WEB_PORT), Handler)
+	#print "serving at port", WEB_PORT
+	#httpd.serve_forever()
 
 	#if len(sys.argv) > 1:
 	#	starting_number = int(sys.argv[1])

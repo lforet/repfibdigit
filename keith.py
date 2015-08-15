@@ -56,6 +56,8 @@ def find_keith(start_value, end_value=None,
     if not grid_size:
         grid_size = 64
 
+    print end_value, type(end_value)
+
     total_data_size = block_size * grid_size
 
     assert 10 ** (len_digits - 1) <= start_value < 10 ** len_digits, (
@@ -218,5 +220,14 @@ if __name__ == '__main__':
         print '     ', sys.argv[0], '--test'
         print ('  in order to execute test code that tries to find known'
                ' Keith numbers with less than 8 digits.')
-    print find_keith(1000000, end_value=None, block_size=None, grid_size=None, verbose=True, iteration_limit=None)
+    #print "cuda specs = ", cuda.MULTIPROCESSOR_COUNT
+    for devicenum in range(cuda.Device.count()):
+        device=cuda.Device(devicenum)
+        attrs=device.get_attributes()
+
+    #Beyond this point is just pretty printing
+        print("\n===Attributes for device %d"%devicenum)
+        for (key,value) in attrs.iteritems():
+            print("%s:%s"%(str(key),str(value)))
+    print find_keith(100000000, end_value=900000000, block_size=1024, grid_size=64, verbose=True, iteration_limit=None)
 
