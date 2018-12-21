@@ -1,0 +1,4 @@
+sumworker_idnowis_repfibdigit = the_rangeWorker: search_for_keith_number is a Keith Number!split_workloadlow_rangenumber_to_testjoinnum_of_chuckslow_inthigh_intlist_to_rtnchuck_sizehigh_rangemy_xrangestepmaptypesPROOF:num_of_workers----------------------------------------ossyseach_workerdatetimeargsruntimestarttest_range<module>search_rangeProcesssearch_rangesstopappendmultiprocessingTime:
+	this function splits the workload into the given number of chucks
+	returns: list of the chuck. Each chuck is a list contain 2 elements: [low_int, high_int]
+	WORKER ID:  Searching range:/home/lforet/projects/repfibdigit/rasp/rasp_client.pytarget finishedleniterlongopenreprsite__all____cmp____doc__compileinspect__dict____exit____file____iter____main____name____path__exc_type__class____enter__exc_value__import____module____delattr____getattr____setattr____builtins____metaclass__exc_traceback/usr/bin/python
